@@ -8,15 +8,30 @@ import (
 	"github.com/nhood-org/nhood-engine-utils/pkg/model"
 )
 
+/*
+TestDataDirectory defines an entrypoint of test data
+
+*/
+var TestDataDirectory = "./test-data"
+
+/*
+TestDataJSONExtension defines supported file type extension
+
+*/
+var TestDataJSONExtension = ".json"
+
 func main() {
-	var root = "./test-data"
-	filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
-		if strings.HasSuffix(info.Name(), ".json") {
-			go func(path string) {
-				t, _ := model.ReadTrack(path)
-				println(t.ToString())
-			}(path)
-		}
-		return nil
-	})
+	filepath.Walk(TestDataDirectory, handlePath)
+}
+
+func handlePath(path string, info os.FileInfo, err error) error {
+	if strings.HasSuffix(info.Name(), TestDataJSONExtension) {
+		go handleJSONPath(path)
+	}
+	return nil
+}
+
+func handleJSONPath(path string) {
+	t, _ := model.ReadTrack(path)
+	println(t.ToString())
 }
