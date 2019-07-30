@@ -5,15 +5,17 @@ Track is a song entity
 
 */
 type Track struct {
-	ID     string `json:"track_id"`
-	Artist string `json:"artist"`
-	Title  string `json:"title"`
+	ID     string     `json:"track_id"`
+	Artist string     `json:"artist"`
+	Title  string     `json:"title"`
+	Tags   [][]string `json:"tags"`
 }
 
 /*
-ToString returns a string representation of a track entity
+TrackTag is a song tag entity
 
 */
-func (t *Track) ToString() string {
-	return t.ID + ": " + t.Artist + " - " + t.Title
+type TrackTag struct {
+	Name   string
+	Weight int16
 }

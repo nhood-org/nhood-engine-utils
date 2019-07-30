@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -22,7 +23,6 @@ func main() {
 
 func handlePath(path string, info os.FileInfo, err error) error {
 	if strings.HasSuffix(info.Name(), testDataJSONExtension) {
-		// TODO!!! use channel in order to not lose files
 		go handleJSONPath(path)
 	}
 	return nil
@@ -39,7 +39,7 @@ func monitor() {
 	for {
 		select {
 		case t := <-ch:
-			println(t.ToString())
+			fmt.Printf("%+v\n", *t)
 		case <-time.After(timeout):
 			done = true
 		}
