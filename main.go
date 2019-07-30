@@ -5,25 +5,35 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/nhood-org/nhood-engine-utils/pkg/model"
 )
 
-const testDataDirectory = "./test-data"
+const testDataDirectory = "./test_data"
 const testDataJSONExtension = ".json"
 const timeout = 200 * time.Millisecond
 
 var ch = make(chan *model.Track)
+var chw sync.WaitGroup
 
 func main() {
-	filepath.Walk(testDataDirectory, handlePath)
-	monitor()
+	chw.Add(1)
+	go handleRootPath(testDataDirectory)
+	go monitor()
+	chw.Wait()
+}
+
+func handleRootPath(path string) {
+	filepath.Walk(path, handlePath)
+	chw.Done()
 }
 
 func handlePath(path string, info os.FileInfo, err error) error {
 	if strings.HasSuffix(info.Name(), testDataJSONExtension) {
-		go handleJSONPath(path)
+		chw.Add(1)
+		handleJSONPath(path)
 	}
 	return nil
 }
@@ -31,21 +41,11 @@ func handlePath(path string, info os.FileInfo, err error) error {
 func handleJSONPath(path string) {
 	t, _ := model.ReadTrack(path)
 	ch <- t
+	chw.Done()
 }
 
 func monitor() {
-	var done = false
-
 	for {
-		select {
-		case t := <-ch:
-			fmt.Printf("%+v\n", *t)
-		case <-time.After(timeout):
-			done = true
-		}
-
-		if done {
-			break
-		}
+		fmt.Printf("%+v\n", *<-ch)
 	}
 }
