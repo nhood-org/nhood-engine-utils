@@ -8,10 +8,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/nhood-org/nhood-engine-utils/pkg/arguments"
 	"github.com/nhood-org/nhood-engine-utils/pkg/model"
 )
 
-const testDataDirectory = "./test_data"
 const testDataJSONExtension = ".json"
 const timeout = 200 * time.Millisecond
 
@@ -19,9 +19,15 @@ var ch = make(chan *model.Track)
 var chw sync.WaitGroup
 
 func main() {
+	args, err := arguments.ResolveArguments()
+	if err != nil {
+		panic(err)
+	}
+
 	chw.Add(1)
-	go handleRootPath(testDataDirectory)
+	go handleRootPath(args.Root)
 	go monitor()
+
 	chw.Wait()
 }
 
