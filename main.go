@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -10,13 +9,14 @@ import (
 
 	"github.com/nhood-org/nhood-engine-utils/pkg/arguments"
 	"github.com/nhood-org/nhood-engine-utils/pkg/model"
+	"github.com/nhood-org/nhood-engine-utils/pkg/service"
 )
 
 const testDataJSONExtension = ".json"
 const timeout = 200 * time.Millisecond
 
-var ch = make(chan *model.Track)
-var chw sync.WaitGroup
+var collector = service.NewTagCollector()
+var collectorWaitGroup sync.WaitGroup
 
 func main() {
 	args, err := arguments.ResolveArguments()
@@ -24,34 +24,29 @@ func main() {
 		panic(err)
 	}
 
-	chw.Add(1)
+	collectorWaitGroup.Add(1)
 	go handleRootPath(args.Root)
-	go monitor()
-
-	chw.Wait()
+	go collector.Monitor()
+	collectorWaitGroup.Wait()
 }
 
 func handleRootPath(path string) {
 	filepath.Walk(path, handlePath)
-	chw.Done()
+	collectorWaitGroup.Done()
 }
 
 func handlePath(path string, info os.FileInfo, err error) error {
 	if strings.HasSuffix(info.Name(), testDataJSONExtension) {
-		chw.Add(1)
 		handleJSONPath(path)
 	}
 	return nil
 }
 
 func handleJSONPath(path string) {
+	collectorWaitGroup.Add(1)
 	t, _ := model.ReadTrack(path)
-	ch <- t
-	chw.Done()
-}
-
-func monitor() {
-	for {
-		fmt.Printf("%+v\n", *<-ch)
+	for _, tag := range t.Tags {
+		collector.Input <- tag
 	}
+	collectorWaitGroup.Done()
 }
