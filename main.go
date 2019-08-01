@@ -15,8 +15,8 @@ import (
 const testDataJSONExtension = ".json"
 const timeout = 200 * time.Millisecond
 
-var collector = service.NewTagCollector()
-var collectorWaitGroup sync.WaitGroup
+var wg sync.WaitGroup
+var collector = service.NewTagCollector(&wg)
 
 func main() {
 	args, err := arguments.ResolveArguments()
@@ -24,15 +24,15 @@ func main() {
 		panic(err)
 	}
 
-	collectorWaitGroup.Add(1)
+	wg.Add(1)
 	go handleRootPath(args.Root)
 	go collector.Monitor()
-	collectorWaitGroup.Wait()
+	wg.Wait()
 }
 
 func handleRootPath(path string) {
 	filepath.Walk(path, handlePath)
-	collectorWaitGroup.Done()
+	wg.Done()
 }
 
 func handlePath(path string, info os.FileInfo, err error) error {
@@ -43,10 +43,9 @@ func handlePath(path string, info os.FileInfo, err error) error {
 }
 
 func handleJSONPath(path string) {
-	collectorWaitGroup.Add(1)
 	t, _ := model.ReadTrack(path)
 	for _, tag := range t.Tags {
+		wg.Add(1)
 		collector.Input <- tag
 	}
-	collectorWaitGroup.Done()
 }
