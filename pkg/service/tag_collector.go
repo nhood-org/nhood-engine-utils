@@ -3,13 +3,12 @@ package service
 import "sync"
 
 /*
-TagCollector is service that collects all tags
-provided through an input channel 'Input'
+TagCollector is service that collects all registered tags
 
 */
 type TagCollector struct {
-	Input chan []string
-	wg    *sync.WaitGroup
+	in  chan []string
+	inw *sync.WaitGroup
 }
 
 /*
@@ -18,19 +17,37 @@ NewTagCollector creates a new instance of TagCollector
 */
 func NewTagCollector(wg *sync.WaitGroup) *TagCollector {
 	return &TagCollector{
-		Input: make(chan []string),
-		wg:    wg,
+		in:  make(chan []string),
+		inw: wg,
 	}
+}
+
+/*
+Register adds incoming tag to the processing channel
+
+*/
+func (c *TagCollector) Register(tag []string) error {
+	c.inw.Add(1)
+	c.in <- tag
+	return nil
 }
 
 /*
 Monitor runs an infinite loop handling incoming tags
 
 */
-func (c *TagCollector) Monitor() error {
+func (c *TagCollector) Monitor() {
 	for {
-		tag := <-c.Input
+		tag := <-c.in
 		print(tag[0] + ": " + tag[1] + "\n")
-		c.wg.Done()
+		c.inw.Done()
 	}
+}
+
+/*
+Wait awaits for all tags to be processed
+
+*/
+func (c *TagCollector) Wait() {
+	c.inw.Wait()
 }
