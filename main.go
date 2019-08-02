@@ -5,7 +5,6 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/nhood-org/nhood-engine-utils/pkg/arguments"
 	"github.com/nhood-org/nhood-engine-utils/pkg/model"
@@ -13,7 +12,6 @@ import (
 )
 
 const supportedExtension = ".json"
-const timeout = 200 * time.Millisecond
 
 var mwg sync.WaitGroup
 var cwg sync.WaitGroup
