@@ -1,12 +1,12 @@
 package command
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
 
-	"github.com/nhood-org/nhood-engine-utils/pkg/arguments"
 	"github.com/nhood-org/nhood-engine-utils/pkg/model"
 	"github.com/nhood-org/nhood-engine-utils/pkg/service"
 
@@ -35,8 +35,12 @@ func NewCollectingTagsCommand() *cobra.Command {
 	}
 }
 
+type collectingTagsCommandArguments struct {
+	Root string
+}
+
 func execute(cmd *cobra.Command, cmdArgs []string) {
-	args, err := arguments.ResolveArguments(cmdArgs)
+	args, err := resolveArguments(cmdArgs)
 	if err != nil {
 		panic(err)
 	}
@@ -47,6 +51,25 @@ func execute(cmd *cobra.Command, cmdArgs []string) {
 
 	mwg.Wait()
 	collector.Wait()
+}
+
+func resolveArguments(args []string) (*collectingTagsCommandArguments, error) {
+	if len(args) == 0 {
+		return nil, errors.New("Directory argument is required")
+	}
+
+	root := args[0]
+	if _, err := os.Stat(root); err == nil {
+
+	} else if os.IsNotExist(err) {
+		return nil, errors.New("Directory '" + root + "' does not exist")
+	} else {
+		return nil, errors.New("Could not check '" + root + "' directory")
+	}
+
+	return &collectingTagsCommandArguments{
+		Root: root,
+	}, nil
 }
 
 func handleRootPath(path string) {
