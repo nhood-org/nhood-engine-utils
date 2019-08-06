@@ -17,12 +17,12 @@ type Arguments struct {
 ResolveArguments will parse all arguments and return as Arguments structure
 
 */
-func ResolveArguments() (*Arguments, error) {
-	if len(os.Args) == 1 {
+func ResolveArguments(args []string) (*Arguments, error) {
+	if len(args) == 0 {
 		return nil, errors.New("Directory argument is required")
 	}
 
-	root := os.Args[1]
+	root := args[0]
 	if _, err := os.Stat(root); err == nil {
 
 	} else if os.IsNotExist(err) {
