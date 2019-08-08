@@ -3,9 +3,11 @@ package command
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/nhood-org/nhood-engine-utils/pkg/model"
 	"github.com/nhood-org/nhood-engine-utils/pkg/service"
@@ -36,6 +38,8 @@ func NewTagCollectorCommand() *cobra.Command {
 		},
 	}
 }
+
+var fileCounter int32
 
 type tagCollectorCommandArguments struct {
 	Root string
@@ -74,8 +78,28 @@ func resolveArguments(args []string) (*tagCollectorCommandArguments, error) {
 }
 
 func handleRootPath(path string) {
-	filepath.Walk(path, handlePath)
+	files, err := ioutil.ReadDir(path)
+	if err != nil {
+		panic(err)
+	}
+
+	var wg sync.WaitGroup
+	for _, f := range files {
+		if !f.IsDir() {
+			continue
+		}
+		dirPath := path + "/" + f.Name()
+		wg.Add(1)
+		go handleDirectoryPath(dirPath, &wg)
+	}
+	wg.Wait()
+
 	collector.Done()
+}
+
+func handleDirectoryPath(path string, wg *sync.WaitGroup) {
+	filepath.Walk(path, handlePath)
+	wg.Done()
 }
 
 func handlePath(path string, info os.FileInfo, err error) error {
@@ -83,6 +107,10 @@ func handlePath(path string, info os.FileInfo, err error) error {
 		err := handleJSONPath(path)
 		if err != nil {
 			return err
+		}
+		fileCounter++
+		if fileCounter%1000 == 0 {
+			println("Processed:", fileCounter, "files")
 		}
 	}
 	return nil
