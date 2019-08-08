@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 	"strings"
 	"sync"
 
@@ -78,31 +77,40 @@ func resolveArguments(args []string) (*tagCollectorCommandArguments, error) {
 }
 
 func handleRootPath(path string) {
-	files, err := ioutil.ReadDir(path)
+	info, err := os.Stat(path)
 	if err != nil {
 		panic(err)
 	}
-
-	var wg sync.WaitGroup
-	for _, f := range files {
-		if !f.IsDir() {
-			continue
-		}
-		dirPath := path + "/" + f.Name()
-		wg.Add(1)
-		go handleDirectoryPath(dirPath, &wg)
-	}
-	wg.Wait()
-
+	handleDir(path, info)
 	collector.Done()
 }
 
-func handleDirectoryPath(path string, wg *sync.WaitGroup) {
-	filepath.Walk(path, handlePath)
-	wg.Done()
+func handleDir(path string, info os.FileInfo) error {
+	files, err := ioutil.ReadDir(path)
+	if err != nil {
+		return err
+	}
+
+	// TODO!!! improve
+	var wg sync.WaitGroup
+	for _, f := range files {
+		fp := path + "/" + f.Name()
+		if f.IsDir() {
+			wg.Add(1)
+			go func() {
+				handleDir(fp, f)
+				wg.Done()
+			}()
+		} else {
+			handleFile(fp, f)
+		}
+	}
+	wg.Wait()
+
+	return nil
 }
 
-func handlePath(path string, info os.FileInfo, err error) error {
+func handleFile(path string, info os.FileInfo) error {
 	if strings.HasSuffix(info.Name(), supportedExtension) {
 		err := handleJSONPath(path)
 		if err != nil {
