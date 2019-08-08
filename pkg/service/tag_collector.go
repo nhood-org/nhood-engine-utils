@@ -7,18 +7,24 @@ TagCollector is service that collects all registered tags
 
 */
 type TagCollector struct {
-	in  chan []string
-	inw *sync.WaitGroup
+	in      chan []string
+	inw     *sync.WaitGroup
+	process *sync.WaitGroup
 }
 
 /*
 NewTagCollector creates a new instance of TagCollector
 
 */
-func NewTagCollector(wg *sync.WaitGroup) *TagCollector {
+func NewTagCollector() *TagCollector {
+	var inw sync.WaitGroup
+	var process sync.WaitGroup
+
+	process.Add(1)
 	return &TagCollector{
-		in:  make(chan []string),
-		inw: wg,
+		in:      make(chan []string),
+		inw:     &inw,
+		process: &process,
 	}
 }
 
@@ -45,9 +51,18 @@ func (c *TagCollector) Monitor() {
 }
 
 /*
+Done closes input channel
+
+*/
+func (c *TagCollector) Done() {
+	c.process.Done()
+}
+
+/*
 Wait awaits for all tags to be processed
 
 */
 func (c *TagCollector) Wait() {
+	c.process.Wait()
 	c.inw.Wait()
 }

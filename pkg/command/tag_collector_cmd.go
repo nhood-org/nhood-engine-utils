@@ -2,10 +2,10 @@ package command
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
-	"sync"
 
 	"github.com/nhood-org/nhood-engine-utils/pkg/model"
 	"github.com/nhood-org/nhood-engine-utils/pkg/service"
@@ -15,45 +15,46 @@ import (
 
 const supportedExtension = ".json"
 
-var mwg sync.WaitGroup
-var cwg sync.WaitGroup
-
-var collector = service.NewTagCollector(&cwg)
+var collector = service.NewTagCollector()
 
 /*
-NewCollectingTagsCommand return an instance of a cobra.Command
+NewTagCollectorCommand return an instance of a cobra.Command
 implementing a tags collection operations
 
 */
-func NewCollectingTagsCommand() *cobra.Command {
+func NewTagCollectorCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:   "tags [directory to walk]",
 		Short: "Find all the tags in the directory",
 		Long:  `tags is for resolution of all tags within the JSON song files in the given directory.`,
 		Args:  cobra.MinimumNArgs(1),
-		Run:   execute,
+		Run: func(cmd *cobra.Command, cmdArgs []string) {
+			err := execute(cmd, cmdArgs)
+			if err != nil {
+				fmt.Println("Could not resolve tags because of an error:", err)
+			}
+		},
 	}
 }
 
-type collectingTagsCommandArguments struct {
+type tagCollectorCommandArguments struct {
 	Root string
 }
 
-func execute(cmd *cobra.Command, cmdArgs []string) {
+func execute(cmd *cobra.Command, cmdArgs []string) error {
 	args, err := resolveArguments(cmdArgs)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
-	mwg.Add(1)
 	go handleRootPath(args.Root)
 	go collector.Monitor()
-
-	mwg.Wait()
 	collector.Wait()
+
+	return nil
 }
 
-func resolveArguments(args []string) (*collectingTagsCommandArguments, error) {
+func resolveArguments(args []string) (*tagCollectorCommandArguments, error) {
 	if len(args) == 0 {
 		return nil, errors.New("Directory argument is required")
 	}
@@ -67,14 +68,14 @@ func resolveArguments(args []string) (*collectingTagsCommandArguments, error) {
 		return nil, errors.New("Could not check '" + root + "' directory")
 	}
 
-	return &collectingTagsCommandArguments{
+	return &tagCollectorCommandArguments{
 		Root: root,
 	}, nil
 }
 
 func handleRootPath(path string) {
 	filepath.Walk(path, handlePath)
-	mwg.Done()
+	collector.Done()
 }
 
 func handlePath(path string, info os.FileInfo, err error) error {

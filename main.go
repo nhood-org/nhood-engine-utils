@@ -7,6 +7,6 @@ import (
 
 func main() {
 	var rootCmd = &cobra.Command{Use: "app"}
-	rootCmd.AddCommand(command.NewCollectingTagsCommand())
+	rootCmd.AddCommand(command.NewTagCollectorCommand())
 	rootCmd.Execute()
 }
