@@ -15,6 +15,7 @@ bin/**
 
 # Visual Studio Code
 .vscode
+__debug_bin
 
 # OSX
 .DS_Store

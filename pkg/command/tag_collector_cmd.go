@@ -91,7 +91,6 @@ func handleDir(path string, info os.FileInfo) error {
 		return err
 	}
 
-	// TODO!!! improve
 	var wg sync.WaitGroup
 	for _, f := range files {
 		fp := path + "/" + f.Name()
@@ -125,7 +124,11 @@ func handleFile(path string, info os.FileInfo) error {
 }
 
 func handleJSONPath(path string) error {
-	t, _ := model.ReadTrack(path)
+	t, err := model.ReadTrack(path)
+	if err != nil {
+		fmt.Printf("Could not process path: %s because of an error: %v\n", path, err)
+		return err
+	}
 	for _, tag := range t.Tags {
 		err := collector.Register(tag)
 		if err != nil {
