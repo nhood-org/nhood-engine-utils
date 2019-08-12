@@ -1,6 +1,9 @@
 package service
 
-import "sync"
+import (
+	"log"
+	"sync"
+)
 
 /*
 TagCollector is service that collects all registered tags
@@ -45,7 +48,7 @@ Monitor runs an infinite loop handling incoming tags
 func (c *TagCollector) Monitor() {
 	for {
 		tag := <-c.in
-		print(tag[0] + ": " + tag[1] + "\n")
+		log.Println(tag[0] + ": " + tag[1] + "\n")
 		c.inw.Done()
 	}
 }
