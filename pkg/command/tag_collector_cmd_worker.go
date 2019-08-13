@@ -1,8 +1,11 @@
 package command
 
 import (
+	"errors"
+	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -65,9 +68,10 @@ func (t *tagCollectorWorkersPool) done() {
 	t.collector.Close()
 }
 
-func (t *tagCollectorWorkersPool) wait() {
+func (t *tagCollectorWorkersPool) finalize() {
 	t.collector.Wait()
 	t.jobsw.Wait()
+	t.collector.PrintResults()
 }
 
 func (t *tagCollectorWorkersPool) handleJob(job *tagCollectorWorkerJob) {
@@ -90,11 +94,35 @@ func (t *tagCollectorWorkersPool) handleJSONPath(path string) error {
 		return err
 	}
 
-	for _, tag := range track.Tags {
-		err := t.collector.Register(tag)
+	for _, array := range track.Tags {
+		err = t.handleTagArray(array)
 		if err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+func (t *tagCollectorWorkersPool) handleTagArray(array []string) error {
+	if len(array) != 2 {
+		message := fmt.Sprintf("Tag array has illegal size: %d expected: 2\n", len(array))
+		return errors.New(message)
+	}
+
+	i, err := strconv.ParseInt(array[1], 10, 16)
+	if err != nil {
+		message := fmt.Sprintf("Could not parse tag weight because of an error: %v\n", err)
+		return errors.New(message)
+	}
+
+	tag := model.TrackTag{
+		Name:   array[0],
+		Weight: i,
+	}
+	err = t.collector.Register(&tag)
+	if err != nil {
+		return err
 	}
 
 	return nil

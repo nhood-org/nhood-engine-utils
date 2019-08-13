@@ -17,5 +17,5 @@ TrackTag is a song tag entity
 */
 type TrackTag struct {
 	Name   string
-	Weight int16
+	Weight int64
 }

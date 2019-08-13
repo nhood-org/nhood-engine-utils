@@ -17,7 +17,7 @@ func execute(cmd *cobra.Command, cmdArgs []string) {
 	}
 	workers.run()
 	go handleRootPath(args.Root)
-	workers.wait()
+	workers.finalize()
 }
 
 type tagCollectorCommandArguments struct {

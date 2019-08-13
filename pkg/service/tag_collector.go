@@ -2,8 +2,11 @@ package service
 
 import (
 	"errors"
-	"log"
+	"fmt"
 	"sync"
+
+	movingaverage "github.com/RobinUS2/golang-moving-average"
+	"github.com/nhood-org/nhood-engine-utils/pkg/model"
 )
 
 /*
@@ -11,10 +14,11 @@ TagCollector is a service that collects all the registered tags and processes th
 
 */
 type TagCollector struct {
-	in          chan []string
+	in          chan *model.TrackTag
 	inw         *sync.WaitGroup
 	closeSignal chan bool
 	closed      bool
+	tags        map[string]*movingaverage.MovingAverage
 }
 
 /*
@@ -24,10 +28,11 @@ NewTagCollector creates a new instance of a TagCollector
 func NewTagCollector() *TagCollector {
 	var inw sync.WaitGroup
 	return &TagCollector{
-		in:          make(chan []string),
+		in:          make(chan *model.TrackTag),
 		inw:         &inw,
 		closeSignal: make(chan bool),
 		closed:      false,
+		tags:        make(map[string]*movingaverage.MovingAverage),
 	}
 }
 
@@ -36,7 +41,7 @@ Register adds incoming tag to the processing channel
 After an input channel is closed tags will not be accepted
 
 */
-func (c *TagCollector) Register(tag []string) error {
+func (c *TagCollector) Register(tag *model.TrackTag) error {
 	if c.closed {
 		return errors.New("Input channel is already closed")
 	}
@@ -59,8 +64,13 @@ func (c *TagCollector) Monitor() {
 	}
 }
 
-func (c *TagCollector) handleTag(tag []string) {
-	log.Println(tag[0] + ": " + tag[1] + "\n")
+func (c *TagCollector) handleTag(tag *model.TrackTag) {
+	_, ok := c.tags[tag.Name]
+	if !ok {
+		c.tags[tag.Name] = movingaverage.New(5)
+	}
+	ma := c.tags[tag.Name]
+	ma.Add(float64(tag.Weight))
 }
 
 /*
@@ -81,4 +91,14 @@ all registered tags to be processed
 func (c *TagCollector) Wait() {
 	_ = <-c.closeSignal
 	c.inw.Wait()
+}
+
+/*
+PrintResults prints all collected tags with its average weights
+
+*/
+func (c *TagCollector) PrintResults() {
+	for key, value := range c.tags {
+		fmt.Println("Tag:", key, "; Count:", value.Count(), "; Weight:", value.Avg())
+	}
 }
