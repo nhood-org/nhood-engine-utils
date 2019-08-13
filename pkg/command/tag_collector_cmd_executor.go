@@ -10,15 +10,14 @@ import (
 
 var workers = newTagCollectorWorkersPool()
 
-func execute(cmd *cobra.Command, cmdArgs []string) error {
+func execute(cmd *cobra.Command, cmdArgs []string) {
 	args, err := resolveArguments(cmdArgs)
 	if err != nil {
-		return err
+		panic(err)
 	}
 	workers.run()
 	go handleRootPath(args.Root)
 	workers.wait()
-	return nil
 }
 
 type tagCollectorCommandArguments struct {

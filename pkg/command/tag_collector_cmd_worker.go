@@ -19,21 +19,25 @@ type tagCollectorWorkerJob struct {
 }
 
 type tagCollectorWorkersPool struct {
-	size       int
-	jobs       chan tagCollectorWorkerJob
-	jobCounter int
-	jobsw      *sync.WaitGroup
-	collector  *service.TagCollector
+	size          int
+	jobs          chan tagCollectorWorkerJob
+	jobsw         *sync.WaitGroup
+	jobOKSignal   chan bool
+	jobOKCounter  int
+	jobNOKCounter int
+	collector     *service.TagCollector
 }
 
 func newTagCollectorWorkersPool() *tagCollectorWorkersPool {
 	var jobsw sync.WaitGroup
 	return &tagCollectorWorkersPool{
-		size:       defaultPoolSize,
-		jobs:       make(chan tagCollectorWorkerJob),
-		jobCounter: 0,
-		jobsw:      &jobsw,
-		collector:  service.NewTagCollector(),
+		size:          defaultPoolSize,
+		jobs:          make(chan tagCollectorWorkerJob),
+		jobsw:         &jobsw,
+		jobOKSignal:   make(chan bool),
+		jobOKCounter:  0,
+		jobNOKCounter: 0,
+		collector:     service.NewTagCollector(),
 	}
 }
 
@@ -42,6 +46,7 @@ func (t *tagCollectorWorkersPool) run() {
 		go t.worker()
 	}
 	go t.collector.Monitor()
+	go t.monitorJobStatus()
 }
 
 func (t *tagCollectorWorkersPool) worker() {
@@ -57,7 +62,7 @@ func (t *tagCollectorWorkersPool) addJob(job *tagCollectorWorkerJob) {
 }
 
 func (t *tagCollectorWorkersPool) done() {
-	t.collector.Done()
+	t.collector.Close()
 }
 
 func (t *tagCollectorWorkersPool) wait() {
@@ -65,31 +70,46 @@ func (t *tagCollectorWorkersPool) wait() {
 	t.jobsw.Wait()
 }
 
-func (t *tagCollectorWorkersPool) handleJob(job *tagCollectorWorkerJob) error {
-	if strings.HasSuffix(job.info.Name(), supportedExtension) {
-		err := t.handleJSONPath(job.path)
-		if err != nil {
-			return err
-		}
-		t.jobCounter++
-		if t.jobCounter%1000 == 0 {
-			log.Println("Processed:", t.jobCounter, "files")
-		}
+func (t *tagCollectorWorkersPool) handleJob(job *tagCollectorWorkerJob) {
+	if !strings.HasSuffix(job.info.Name(), supportedExtension) {
+		return
 	}
-	return nil
+
+	err := t.handleJSONPath(job.path)
+	if err != nil {
+		log.Printf("Could not process path: %s because of an error: %v\n", job.path, err)
+		t.jobOKSignal <- false
+	} else {
+		t.jobOKSignal <- true
+	}
 }
 
 func (t *tagCollectorWorkersPool) handleJSONPath(path string) error {
 	track, err := model.ReadTrack(path)
 	if err != nil {
-		log.Printf("Could not process path: %s because of an error: %v\n", path, err)
 		return err
 	}
+
 	for _, tag := range track.Tags {
 		err := t.collector.Register(tag)
 		if err != nil {
 			return err
 		}
 	}
+
 	return nil
+}
+
+func (t *tagCollectorWorkersPool) monitorJobStatus() {
+	for status := range t.jobOKSignal {
+		if status {
+			t.jobOKCounter++
+		} else {
+			t.jobNOKCounter++
+		}
+		if (t.jobOKCounter > 0 && t.jobOKCounter%1000 == 0) || (t.jobNOKCounter > 0 && t.jobNOKCounter%1000 == 0) {
+			log.Println("Processed:", t.jobOKCounter, "jobs with [OK] status")
+			log.Println("Processed:", t.jobNOKCounter, "jobs with [NOK] status")
+		}
+	}
 }
