@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"sync"
 
-	movingaverage "github.com/RobinUS2/golang-moving-average"
 	"github.com/nhood-org/nhood-engine-utils/pkg/model"
+	"github.com/nhood-org/nhood-engine-utils/pkg/utils"
 )
 
 /*
@@ -18,7 +18,7 @@ type TagCollector struct {
 	inw         *sync.WaitGroup
 	closeSignal chan bool
 	closed      bool
-	tags        map[string]*movingaverage.MovingAverage
+	tags        map[string]*utils.MovingAverage
 }
 
 /*
@@ -32,7 +32,7 @@ func NewTagCollector() *TagCollector {
 		inw:         &inw,
 		closeSignal: make(chan bool),
 		closed:      false,
-		tags:        make(map[string]*movingaverage.MovingAverage),
+		tags:        make(map[string]*utils.MovingAverage),
 	}
 }
 
@@ -67,7 +67,7 @@ func (c *TagCollector) Monitor() {
 func (c *TagCollector) handleTag(tag *model.TrackTag) {
 	_, ok := c.tags[tag.Name]
 	if !ok {
-		c.tags[tag.Name] = movingaverage.New(5)
+		c.tags[tag.Name] = utils.NewMovingAverage()
 	}
 	ma := c.tags[tag.Name]
 	ma.Add(float64(tag.Weight))
@@ -99,6 +99,9 @@ PrintResults prints all collected tags with its average weights
 */
 func (c *TagCollector) PrintResults() {
 	for key, value := range c.tags {
+		if value.Count() < 1000 {
+			continue
+		}
 		fmt.Println("Tag:", key, "; Count:", value.Count(), "; Weight:", value.Avg())
 	}
 }

@@ -2,14 +2,6 @@
 
 
 [[projects]]
-  digest = "1:656b45e674635c2a98f193aaf77c15c819c929f613fb7132a4c968ae413c8d8a"
-  name = "github.com/RobinUS2/golang-moving-average"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "820e3495e36dac8188127c03a9c34d4f7dbcf37a"
-  version = "v1.0.0"
-
-[[projects]]
   digest = "1:870d441fe217b8e689d7949fef6e43efbc787e50f200cb1e70dbca9204a1d6be"
   name = "github.com/inconshreveable/mousetrap"
   packages = ["."]
@@ -36,9 +28,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  input-imports = [
-    "github.com/RobinUS2/golang-moving-average",
-    "github.com/spf13/cobra",
-  ]
+  input-imports = ["github.com/spf13/cobra"]
   solver-name = "gps-cdcl"
   solver-version = 1
