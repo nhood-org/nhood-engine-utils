@@ -3,11 +3,15 @@ package service
 import (
 	"errors"
 	"fmt"
+	"sort"
+	"strings"
 	"sync"
 
 	"github.com/nhood-org/nhood-engine-utils/pkg/model"
 	"github.com/nhood-org/nhood-engine-utils/pkg/utils"
 )
+
+const defaultResultTagCountThreshold = 3000
 
 /*
 TagCollector is a service that collects all the registered tags and processes them
@@ -59,18 +63,22 @@ Monitor runs an infinite loop handling incoming tags
 func (c *TagCollector) Monitor() {
 	for {
 		tag := <-c.in
-		c.handleTag(tag)
+		tags := strings.Split(tag.Name, " ")
+		for _, t := range tags {
+			name := strings.ToLower(t)
+			c.handleTag(name, tag.Weight)
+		}
 		c.inw.Done()
 	}
 }
 
-func (c *TagCollector) handleTag(tag *model.TrackTag) {
-	_, ok := c.tags[tag.Name]
+func (c *TagCollector) handleTag(name string, weight int64) {
+	_, ok := c.tags[name]
 	if !ok {
-		c.tags[tag.Name] = utils.NewMovingAverage()
+		c.tags[name] = utils.NewMovingAverage()
 	}
-	ma := c.tags[tag.Name]
-	ma.Add(float64(tag.Weight))
+	ma := c.tags[name]
+	ma.Add(float64(weight))
 }
 
 /*
@@ -98,10 +106,32 @@ PrintResults prints all collected tags with its average weights
 
 */
 func (c *TagCollector) PrintResults() {
-	for key, value := range c.tags {
-		if value.Count() < 1000 {
-			continue
+	sorted := sortTagsByCount(c.tags)
+	printTags(sorted)
+}
+
+type tag struct {
+	name string
+	ma   *utils.MovingAverage
+}
+
+func sortTagsByCount(tags map[string]*utils.MovingAverage) []tag {
+	var tagSlice []tag
+	for k, v := range tags {
+		if v.Count() >= defaultResultTagCountThreshold {
+			tagSlice = append(tagSlice, tag{k, v})
 		}
-		fmt.Println("Tag:", key, "; Count:", value.Count(), "; Weight:", value.Avg())
+	}
+
+	sort.Slice(tagSlice, func(i, j int) bool {
+		return tagSlice[i].ma.Count() > tagSlice[j].ma.Count()
+	})
+
+	return tagSlice
+}
+
+func printTags(tagSlice []tag) {
+	for _, t := range tagSlice {
+		fmt.Println("Tag:", t.name, "; Count:", t.ma.Count(), "; Weight:", t.ma.Avg())
 	}
 }
