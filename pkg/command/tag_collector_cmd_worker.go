@@ -24,7 +24,7 @@ type tagCollectorWorkerJob struct {
 type tagCollectorWorkersPool struct {
 	size          int
 	jobs          chan tagCollectorWorkerJob
-	jobsw         *sync.WaitGroup
+	jobsMonitor   *sync.WaitGroup
 	jobOKSignal   chan bool
 	jobOKCounter  int
 	jobNOKCounter int
@@ -32,11 +32,11 @@ type tagCollectorWorkersPool struct {
 }
 
 func newTagCollectorWorkersPool() *tagCollectorWorkersPool {
-	var jobsw sync.WaitGroup
+	var jobsMonitor sync.WaitGroup
 	return &tagCollectorWorkersPool{
 		size:          defaultPoolSize,
 		jobs:          make(chan tagCollectorWorkerJob),
-		jobsw:         &jobsw,
+		jobsMonitor:   &jobsMonitor,
 		jobOKSignal:   make(chan bool),
 		jobOKCounter:  0,
 		jobNOKCounter: 0,
@@ -55,12 +55,12 @@ func (t *tagCollectorWorkersPool) run() {
 func (t *tagCollectorWorkersPool) worker() {
 	for j := range t.jobs {
 		t.handleJob(&j)
-		t.jobsw.Done()
+		t.jobsMonitor.Done()
 	}
 }
 
 func (t *tagCollectorWorkersPool) addJob(job *tagCollectorWorkerJob) {
-	t.jobsw.Add(1)
+	t.jobsMonitor.Add(1)
 	t.jobs <- *job
 }
 
@@ -70,7 +70,7 @@ func (t *tagCollectorWorkersPool) done() {
 
 func (t *tagCollectorWorkersPool) finalize() {
 	t.collector.Wait()
-	t.jobsw.Wait()
+	t.jobsMonitor.Wait()
 	t.collector.PrintResults()
 }
 
