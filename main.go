@@ -11,7 +11,10 @@ func main() {
 	defer handleErrors()
 	var rootCmd = &cobra.Command{Use: "app"}
 	rootCmd.AddCommand(command.NewTagCollectorCommand())
-	rootCmd.Execute()
+	err := rootCmd.Execute()
+	if err != nil {
+		panic(err)
+	}
 }
 
 func handleErrors() {

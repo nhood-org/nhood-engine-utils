@@ -84,7 +84,7 @@ func (c *TagCollector) handleTag(name string, weight int64) {
 /*
 Close closes input channel execution
 After an input channel is closed tags may not be processed
-Cannel cannot be open again
+Channel cannot be open again
 
 */
 func (c *TagCollector) Close() {
