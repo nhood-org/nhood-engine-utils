@@ -15,7 +15,7 @@ func ReadTrack(fileName string) (*Track, error) {
 		return nil, err
 	}
 
-	defer file.Close()
+	defer finalizeTrackReading(file)
 
 	decoder := json.NewDecoder(file)
 	c := Track{}
@@ -25,4 +25,11 @@ func ReadTrack(fileName string) (*Track, error) {
 	}
 
 	return &c, nil
+}
+
+func finalizeTrackReading(file *os.File) {
+	err := file.Close()
+	if err != nil {
+		panic(err)
+	}
 }

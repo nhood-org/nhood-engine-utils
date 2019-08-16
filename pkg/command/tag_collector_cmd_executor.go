@@ -10,7 +10,7 @@ import (
 
 var workers = newTagCollectorWorkersPool()
 
-func execute(cmd *cobra.Command, cmdArgs []string) {
+func execute(_ *cobra.Command, cmdArgs []string) {
 	args, err := resolveArguments(cmdArgs)
 	if err != nil {
 		panic(err)
@@ -26,16 +26,16 @@ type tagCollectorCommandArguments struct {
 
 func resolveArguments(args []string) (*tagCollectorCommandArguments, error) {
 	if len(args) == 0 {
-		return nil, errors.New("Directory argument is required")
+		return nil, errors.New("directory argument is required")
 	}
 
 	root := args[0]
 	if _, err := os.Stat(root); err == nil {
 
 	} else if os.IsNotExist(err) {
-		return nil, errors.New("Directory '" + root + "' does not exist")
+		return nil, errors.New("directory '" + root + "' does not exist")
 	} else {
-		return nil, errors.New("Could not check '" + root + "' directory")
+		return nil, errors.New("could not check '" + root + "' directory")
 	}
 
 	return &tagCollectorCommandArguments{
@@ -44,11 +44,14 @@ func resolveArguments(args []string) (*tagCollectorCommandArguments, error) {
 }
 
 func handleRootPath(path string) {
-	filepath.Walk(path, handlePath)
+	err := filepath.Walk(path, handlePath)
+	if err != nil {
+		panic(err)
+	}
 	workers.done()
 }
 
-func handlePath(path string, info os.FileInfo, err error) error {
+func handlePath(path string, info os.FileInfo, _ error) error {
 	j := tagCollectorWorkerJob{
 		path: path,
 		info: info,

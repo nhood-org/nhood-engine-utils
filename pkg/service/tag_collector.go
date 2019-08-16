@@ -47,7 +47,7 @@ After an input channel is closed tags will not be accepted
 */
 func (c *TagCollector) Register(tag *model.TrackTag) error {
 	if c.closed {
-		return errors.New("Input channel is already closed")
+		return errors.New("input channel is already closed")
 	}
 
 	c.inw.Add(1)
