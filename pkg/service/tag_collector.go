@@ -11,8 +11,6 @@ import (
 	"github.com/nhood-org/nhood-engine-utils/pkg/utils"
 )
 
-const defaultResultTagCountThreshold = 3000
-
 /*
 TagCollector is a service that collects all the registered tags and processes them
 
@@ -23,6 +21,11 @@ type TagCollector struct {
 	closeSignal chan bool
 	closed      bool
 	tags        map[string]*utils.MovingAverage
+}
+
+type tag struct {
+	name string
+	ma   *utils.MovingAverage
 }
 
 /*
@@ -66,7 +69,10 @@ func (c *TagCollector) Monitor() {
 		tags := strings.Split(tag.Name, " ")
 		for _, t := range tags {
 			name := strings.ToLower(t)
-			c.handleTag(name, tag.Weight)
+			isValid := nameIsNotAuxiliaryWord(name)
+			if isValid {
+				c.handleTag(name, tag.Weight)
+			}
 		}
 		c.inw.Done()
 	}
@@ -110,15 +116,10 @@ func (c *TagCollector) PrintResults() {
 	printTags(sorted)
 }
 
-type tag struct {
-	name string
-	ma   *utils.MovingAverage
-}
-
 func sortTagsByCount(tags map[string]*utils.MovingAverage) []tag {
 	var tagSlice []tag
 	for k, v := range tags {
-		if v.Count() >= defaultResultTagCountThreshold {
+		if hasSufficientCount(v) {
 			tagSlice = append(tagSlice, tag{k, v})
 		}
 	}
