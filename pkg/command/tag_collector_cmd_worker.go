@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -23,24 +24,28 @@ type tagCollectorWorkerJob struct {
 
 type tagCollectorWorkersPool struct {
 	size          int
+	env           *tagCollectorWorkersEnvironment
 	jobs          chan tagCollectorWorkerJob
 	jobsMonitor   *sync.WaitGroup
 	jobOKSignal   chan bool
 	jobOKCounter  int
 	jobNOKCounter int
-	collector     *service.TagCollector
 }
 
-func newTagCollectorWorkersPool() *tagCollectorWorkersPool {
+type tagCollectorWorkersEnvironment struct {
+	collector *service.TagCollector
+}
+
+func newTagCollectorWorkersPool(env *tagCollectorWorkersEnvironment) *tagCollectorWorkersPool {
 	var jobsMonitor sync.WaitGroup
 	return &tagCollectorWorkersPool{
 		size:          defaultPoolSize,
+		env:           env,
 		jobs:          make(chan tagCollectorWorkerJob),
 		jobsMonitor:   &jobsMonitor,
 		jobOKSignal:   make(chan bool),
 		jobOKCounter:  0,
 		jobNOKCounter: 0,
-		collector:     service.NewTagCollector(),
 	}
 }
 
@@ -48,7 +53,7 @@ func (t *tagCollectorWorkersPool) run() {
 	for w := 0; w < t.size; w++ {
 		go t.worker()
 	}
-	go t.collector.Monitor()
+	go t.env.collector.Monitor()
 	go t.monitorJobStatus()
 }
 
@@ -65,13 +70,13 @@ func (t *tagCollectorWorkersPool) addJob(job *tagCollectorWorkerJob) {
 }
 
 func (t *tagCollectorWorkersPool) done() {
-	t.collector.Close()
+	t.env.collector.Close()
 }
 
 func (t *tagCollectorWorkersPool) finalize() {
-	t.collector.Wait()
+	t.env.collector.Wait()
 	t.jobsMonitor.Wait()
-	t.collector.PrintResults()
+	t.env.collector.PrintResults()
 }
 
 func (t *tagCollectorWorkersPool) handleJob(job *tagCollectorWorkerJob) {
@@ -86,6 +91,25 @@ func (t *tagCollectorWorkersPool) handleJob(job *tagCollectorWorkerJob) {
 	} else {
 		t.jobOKSignal <- true
 	}
+}
+
+func (t *tagCollectorWorkersPool) handleRootPath(path string) {
+	err := filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
+		return t.handlePath(path, info, err)
+	})
+	if err != nil {
+		panic(err)
+	}
+	t.done()
+}
+
+func (t *tagCollectorWorkersPool) handlePath(path string, info os.FileInfo, _ error) error {
+	j := tagCollectorWorkerJob{
+		path: path,
+		info: info,
+	}
+	t.addJob(&j)
+	return nil
 }
 
 func (t *tagCollectorWorkersPool) handleJSONPath(path string) error {
@@ -120,7 +144,7 @@ func (t *tagCollectorWorkersPool) handleTagArray(array []string) error {
 		Name:   array[0],
 		Weight: i,
 	}
-	err = t.collector.Register(&tag)
+	err = t.env.collector.Register(&tag)
 	if err != nil {
 		return err
 	}

@@ -3,28 +3,36 @@ package command
 import (
 	"errors"
 	"os"
-	"path/filepath"
+	"strconv"
 
+	"github.com/nhood-org/nhood-engine-utils/pkg/service"
 	"github.com/spf13/cobra"
 )
 
-var workers = newTagCollectorWorkersPool()
-
-func execute(_ *cobra.Command, cmdArgs []string) {
-	args, err := resolveArguments(cmdArgs)
+func execute(cmd *cobra.Command, cmdArgs []string) {
+	args, err := resolveArguments(cmd, cmdArgs)
 	if err != nil {
 		panic(err)
 	}
+
+	collectorConfig := service.NewTagCollectorConfig(args.CountThreshold)
+	collector := service.NewTagCollector(collectorConfig)
+	env := &tagCollectorWorkersEnvironment{
+		collector: collector,
+	}
+	workers := newTagCollectorWorkersPool(env)
+
 	workers.run()
-	go handleRootPath(args.Root)
+	go workers.handleRootPath(args.Root)
 	workers.finalize()
 }
 
 type tagCollectorCommandArguments struct {
-	Root string
+	Root           string
+	CountThreshold int
 }
 
-func resolveArguments(args []string) (*tagCollectorCommandArguments, error) {
+func resolveArguments(cmd *cobra.Command, args []string) (*tagCollectorCommandArguments, error) {
 	if len(args) == 0 {
 		return nil, errors.New("directory argument is required")
 	}
@@ -38,24 +46,13 @@ func resolveArguments(args []string) (*tagCollectorCommandArguments, error) {
 		return nil, errors.New("could not check '" + root + "' directory")
 	}
 
-	return &tagCollectorCommandArguments{
-		Root: root,
-	}, nil
-}
-
-func handleRootPath(path string) {
-	err := filepath.Walk(path, handlePath)
+	threshold, err := strconv.Atoi(cmd.Flag("threshold").Value.String())
 	if err != nil {
-		panic(err)
+		return nil, errors.New("threshold flag is invalid")
 	}
-	workers.done()
-}
 
-func handlePath(path string, info os.FileInfo, _ error) error {
-	j := tagCollectorWorkerJob{
-		path: path,
-		info: info,
-	}
-	workers.addJob(&j)
-	return nil
+	return &tagCollectorCommandArguments{
+		Root:           root,
+		CountThreshold: threshold,
+	}, nil
 }

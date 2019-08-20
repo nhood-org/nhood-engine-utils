@@ -16,11 +16,20 @@ TagCollector is a service that collects all the registered tags and processes th
 
 */
 type TagCollector struct {
+	config      *TagCollectorConfig
 	in          chan *model.TrackTag
 	inw         *sync.WaitGroup
 	closeSignal chan bool
 	closed      bool
 	tags        map[string]*utils.MovingAverage
+}
+
+/*
+TagCollectorConfig defines an internal TagCollectorConfig configuration
+
+*/
+type TagCollectorConfig struct {
+	countThreshold int
 }
 
 type tag struct {
@@ -32,14 +41,25 @@ type tag struct {
 NewTagCollector creates a new instance of a TagCollector
 
 */
-func NewTagCollector() *TagCollector {
+func NewTagCollector(config *TagCollectorConfig) *TagCollector {
 	var inw sync.WaitGroup
 	return &TagCollector{
+		config:      config,
 		in:          make(chan *model.TrackTag),
 		inw:         &inw,
 		closeSignal: make(chan bool),
 		closed:      false,
 		tags:        make(map[string]*utils.MovingAverage),
+	}
+}
+
+/*
+NewTagCollectorConfig creates a new instance of a TagCollectorConfig
+
+*/
+func NewTagCollectorConfig(countThreshold int) *TagCollectorConfig {
+	return &TagCollectorConfig{
+		countThreshold: countThreshold,
 	}
 }
 
@@ -112,14 +132,14 @@ PrintResults prints all collected tags with its average weights
 
 */
 func (c *TagCollector) PrintResults() {
-	sorted := sortTagsByCount(c.tags)
+	sorted := c.sortTagsByCount(c.tags)
 	printTags(sorted)
 }
 
-func sortTagsByCount(tags map[string]*utils.MovingAverage) []tag {
+func (c *TagCollector) sortTagsByCount(tags map[string]*utils.MovingAverage) []tag {
 	var tagSlice []tag
 	for k, v := range tags {
-		if hasSufficientCount(v) {
+		if v.Count() >= float64(c.config.countThreshold) {
 			tagSlice = append(tagSlice, tag{k, v})
 		}
 	}
