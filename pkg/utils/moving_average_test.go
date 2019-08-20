@@ -1,68 +1,50 @@
 package utils
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
 
 func TestMovingAvergeInitialState(t *testing.T) {
+	assert := assert.New(t)
+
 	avr := NewMovingAverage()
 
-	if avr.sum != 0 {
-		t.Errorf("Expected avr.sum to be 0, while it was %f", avr.sum)
-	}
-	if avr.count != 0 {
-		t.Errorf("Expected avr.count to be 0, while it was %f", avr.count)
-	}
-	if avr.Count() != 0 {
-		t.Errorf("Expected avr.Count() to return 0, while it was %f", avr.Count())
-	}
-	if avr.Avg() != 0 {
-		t.Errorf("Expected avr.Avg() to return 0, while it was %f", avr.Avg())
-	}
+	assert.Equal(avr.sum, 0.0)
+	assert.Equal(avr.count, 0.0)
+	assert.Equal(avr.Count(), 0.0)
+	assert.Equal(avr.Avg(), 0.0)
 }
 
 func TestMovingAverageCumulatesValuesCorrectly(t *testing.T) {
+	assert := assert.New(t)
+
 	avr := NewMovingAverage()
 
 	avr.Add(1.0)
-	if avr.Count() != 1 {
-		t.Errorf("Expected avr.Count() to return 1, while it was %f", avr.Count())
-	}
-	if avr.Avg() != 1 {
-		t.Errorf("Expected avr.Avg() to return 1, while it was %f", avr.Avg())
-	}
+	assert.Equal(avr.Count(), 1.0)
+	assert.Equal(avr.Avg(), 1.0)
 
 	avr.Add(2.0)
-	if avr.Count() != 2 {
-		t.Errorf("Expected avr.Count() to return 2, while it was %f", avr.Count())
-	}
-	if avr.Avg() != 1.5 {
-		t.Errorf("Expected avr.Avg() to return 1.5, while it was %f", avr.Avg())
-	}
+	assert.Equal(avr.Count(), 2.0)
+	assert.Equal(avr.Avg(), 1.5)
 
 	avr.Add(3.0)
-	if avr.Count() != 3 {
-		t.Errorf("Expected avr.Count() to return 3, while it was %f", avr.Count())
-	}
-	if avr.Avg() != 2 {
-		t.Errorf("Expected avr.Avg() to return 2, while it was %f", avr.Avg())
-	}
+	assert.Equal(avr.Count(), 3.0)
+	assert.Equal(avr.Avg(), 2.0)
 }
 
 func TestMovingAverageCumulatesNegativeValuesCorrectly(t *testing.T) {
+	assert := assert.New(t)
+
 	avr := NewMovingAverage()
 
 	avr.Add(1.0)
-	if avr.Count() != 1 {
-		t.Errorf("Expected avr.Count() to return 1, while it was %f", avr.Count())
-	}
-	if avr.Avg() != 1 {
-		t.Errorf("Expected avr.Avg() to return 1, while it was %f", avr.Avg())
-	}
+	assert.Equal(avr.Count(), 1.0)
+	assert.Equal(avr.Avg(), 1.0)
 
 	avr.Add(-1.0)
-	if avr.Count() != 2 {
-		t.Errorf("Expected avr.Count() to return 2, while it was %f", avr.Count())
-	}
-	if avr.Avg() != 0 {
-		t.Errorf("Expected avr.Avg() to return 0, while it was %f", avr.Avg())
-	}
+	assert.Equal(avr.Count(), 2.0)
+	assert.Equal(avr.Avg(), 0.0)
 }
