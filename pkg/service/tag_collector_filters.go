@@ -13,7 +13,12 @@ func init() {
 		panic(err)
 	}
 
-	defer file.Close()
+	defer func() {
+		err = file.Close()
+		if err != nil {
+			panic(err)
+		}
+	}()
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
