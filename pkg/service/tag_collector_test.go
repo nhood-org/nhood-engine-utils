@@ -30,3 +30,35 @@ func TestNewTagCollectorConfig(t *testing.T) {
 	a.NotNil(config)
 	a.Equal(config.countThreshold, countThreshold)
 }
+
+func TestTagCollectorDoesNotAcceptTagsWhenClosed(t *testing.T) {
+
+}
+
+func TestTagCollectorDoesNotAcceptTagsWithCommonWordName(t *testing.T) {
+
+}
+
+func TestTagCollectorDoesNotAcceptTagsWithSingleDigitName(t *testing.T) {
+
+}
+
+func TestTagCollectorDoesNotAcceptTagsWithSingleCharacterName(t *testing.T) {
+
+}
+
+func TestTagCollectorIsCaseInsensitive(t *testing.T) {
+
+}
+
+func TestTagCollectorAcceptsSingleWordTagNames(t *testing.T) {
+
+}
+
+func TestTagCollectorAcceptsMultiWordTagNames(t *testing.T) {
+
+}
+
+func TestTagCollectorComputesWeightAverages(t *testing.T) {
+
+}

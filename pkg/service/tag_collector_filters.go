@@ -43,3 +43,7 @@ func init() {
 func nameIsNotAuxiliaryWord(name string) bool {
 	return !auxiliaryWords[name]
 }
+
+func nameIsNotASingleCharacter(name string) bool {
+	return len(name) != 1
+}

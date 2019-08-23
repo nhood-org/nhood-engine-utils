@@ -89,7 +89,9 @@ func (c *TagCollector) Monitor() {
 		tags := strings.Split(tag.Name, " ")
 		for _, t := range tags {
 			name := strings.ToLower(t)
-			isValid := nameIsNotAuxiliaryWord(name)
+			isValid := true
+			isValid = isValid && nameIsNotAuxiliaryWord(name)
+			isValid = isValid && nameIsNotASingleCharacter(name)
 			if isValid {
 				c.handleTag(name, tag.Weight)
 			}
