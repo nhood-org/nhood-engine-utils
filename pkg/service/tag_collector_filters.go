@@ -2,13 +2,26 @@ package service
 
 import (
 	"bufio"
+	"fmt"
 	"os"
+	"strings"
 )
 
 var auxiliaryWords = make(map[string]bool)
 
 func init() {
-	file, err := os.Open("./pkg/service/auxiliary_words")
+	pwd, err := os.Getwd()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	auxiliaryWordsFile := "./auxiliary_words"
+	if !strings.Contains(pwd, "/pkg/service") {
+		auxiliaryWordsFile = "./pkg/service/auxiliary_words"
+	}
+
+	file, err := os.Open(auxiliaryWordsFile)
 	if err != nil {
 		panic(err)
 	}
