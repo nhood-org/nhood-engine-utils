@@ -70,13 +70,21 @@ func (t *tagCollectorWorkersPool) addJob(job *tagCollectorWorkerJob) {
 }
 
 func (t *tagCollectorWorkersPool) done() {
+	t.jobsMonitor.Wait()
 	t.env.collector.Close()
 }
 
 func (t *tagCollectorWorkersPool) finalize() {
 	t.env.collector.Wait()
-	t.jobsMonitor.Wait()
-	t.env.collector.PrintResults()
+
+	tags, err := t.env.collector.GetResults()
+	if err != nil {
+		panic(err)
+	}
+
+	for _, t := range tags {
+		fmt.Println("Tag:", t.Name, "; Count:", t.Statistics.Count(), "; Weight:", t.Statistics.Avg())
+	}
 }
 
 func (t *tagCollectorWorkersPool) handleJob(job *tagCollectorWorkerJob) {

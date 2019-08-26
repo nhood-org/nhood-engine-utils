@@ -2,7 +2,6 @@ package service
 
 import (
 	"errors"
-	"fmt"
 	"sort"
 	"strings"
 	"sync"
@@ -32,9 +31,13 @@ type TagCollectorConfig struct {
 	countThreshold int
 }
 
-type tag struct {
-	name string
-	ma   *utils.MovingAverage
+/*
+Tag defines a tag and its statistics
+
+*/
+type Tag struct {
+	Name       string
+	Statistics *utils.MovingAverage
 }
 
 /*
@@ -85,18 +88,23 @@ Monitor runs an infinite loop handling incoming tags
 */
 func (c *TagCollector) Monitor() {
 	for {
-		tag := <-c.in
-		tags := strings.Split(tag.Name, " ")
-		for _, t := range tags {
-			name := strings.ToLower(t)
-			isValid := true
-			isValid = isValid && nameIsNotAuxiliaryWord(name)
-			isValid = isValid && nameIsNotASingleCharacter(name)
-			if isValid {
-				c.handleTag(name, tag.Weight)
+		select {
+		case tag := <-c.in:
+			tags := strings.Split(tag.Name, " ")
+			for _, t := range tags {
+				name := strings.ToLower(t)
+				isValid := true
+				isValid = isValid && nameIsNotAuxiliaryWord(name)
+				isValid = isValid && nameIsNotASingleCharacter(name)
+				if isValid {
+					c.handleTag(name, tag.Weight)
+				}
 			}
+			c.inw.Done()
+		case _ = <-c.closeSignal:
+			c.closeSignal <- true
+			break
 		}
-		c.inw.Done()
 	}
 }
 
@@ -122,39 +130,32 @@ func (c *TagCollector) Close() {
 /*
 Wait awaits for a close signal and then for
 all registered tags to be processed
-
+l
 */
 func (c *TagCollector) Wait() {
-	_ = <-c.closeSignal
+	c.closed = <-c.closeSignal
 	c.inw.Wait()
 }
 
 /*
-PrintResults prints all collected tags with its average weights
+GetResults returns all collected tags with its statistics
 
 */
-func (c *TagCollector) PrintResults() {
-	sorted := c.sortTagsByCount(c.tags)
-	printTags(sorted)
-}
+func (c *TagCollector) GetResults() ([]Tag, error) {
+	if !c.closed {
+		return nil, errors.New("input channel is not closed yet")
+	}
 
-func (c *TagCollector) sortTagsByCount(tags map[string]*utils.MovingAverage) []tag {
-	var tagSlice []tag
-	for k, v := range tags {
-		if v.Count() >= float64(c.config.countThreshold) {
-			tagSlice = append(tagSlice, tag{k, v})
+	var tagSlice []Tag
+	for k, v := range c.tags {
+		if v.Count() >= c.config.countThreshold {
+			tagSlice = append(tagSlice, Tag{k, v})
 		}
 	}
 
 	sort.Slice(tagSlice, func(i, j int) bool {
-		return tagSlice[i].ma.Count() > tagSlice[j].ma.Count()
+		return tagSlice[i].Statistics.Count() > tagSlice[j].Statistics.Count()
 	})
 
-	return tagSlice
-}
-
-func printTags(tagSlice []tag) {
-	for _, t := range tagSlice {
-		fmt.Println("Tag:", t.name, "; Count:", t.ma.Count(), "; Weight:", t.ma.Avg())
-	}
+	return tagSlice, nil
 }

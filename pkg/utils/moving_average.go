@@ -6,7 +6,7 @@ MovingAverage maintains an data for running statistics of numbers added to it
 */
 type MovingAverage struct {
 	sum   float64
-	count float64
+	count int
 }
 
 /*
@@ -33,7 +33,7 @@ func (r *MovingAverage) Add(v float64) {
 Count return a size of all numbers added
 
 */
-func (r *MovingAverage) Count() float64 {
+func (r *MovingAverage) Count() int {
 	return r.count
 }
 
@@ -45,5 +45,5 @@ func (r *MovingAverage) Avg() float64 {
 	if r.count == 0 {
 		return 0
 	}
-	return r.sum / r.count
+	return r.sum / float64(r.count)
 }
