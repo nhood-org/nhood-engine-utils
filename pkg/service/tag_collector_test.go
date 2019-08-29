@@ -15,7 +15,7 @@ func TestNewTagCollector(t *testing.T) {
 	c := NewTagCollector(config)
 
 	a.NotNil(c)
-	a.Equal(c.config, config)
+	a.Equal(config, c.config)
 
 	a.NotNil(c.in)
 	a.NotNil(c.inw)
@@ -31,7 +31,7 @@ func TestNewTagCollectorConfig(t *testing.T) {
 	config := NewTagCollectorConfig(countThreshold)
 
 	a.NotNil(config)
-	a.Equal(config.countThreshold, countThreshold)
+	a.Equal(countThreshold, config.countThreshold)
 }
 
 func TestTagCollectorDoesNotAcceptTagsWhenClosed(t *testing.T) {
@@ -48,7 +48,7 @@ func TestTagCollectorDoesNotAcceptTagsWhenClosed(t *testing.T) {
 	c.Wait()
 
 	err = c.Register(&model.TrackTag{})
-	a.Equal(err, errors.New("input channel is already closed"))
+	a.Equal(errors.New("input channel is already closed"), err)
 }
 
 func TestTagCollectorDoesNotReturnResultsWhenNotClosed(t *testing.T) {
@@ -59,7 +59,7 @@ func TestTagCollectorDoesNotReturnResultsWhenNotClosed(t *testing.T) {
 
 	results, err := c.GetResults()
 	a.Nil(results)
-	a.Equal(err, errors.New("input channel is not closed yet"))
+	a.Equal(errors.New("input channel is not closed yet"), err)
 }
 
 func TestTagCollectorDoesNotAcceptTagsWithCommonWordName(t *testing.T) {
@@ -151,7 +151,7 @@ func TestTagCollectorIsCaseInsensitive(t *testing.T) {
 	a.Nil(err)
 
 	a.Len(results, 1)
-	a.Equal(results[0].Name, "rock")
+	a.Equal("rock", results[0].Name)
 }
 
 func TestTagCollectorAcceptsMultiWordTagNames(t *testing.T) {
@@ -177,7 +177,7 @@ func TestTagCollectorAcceptsMultiWordTagNames(t *testing.T) {
 		names = append(names, t.Name)
 	}
 	a.Contains(names, "rock")
-	a.Contains(names, "american")
+	a.Contains(names, "rock")
 }
 
 func TestTagCollectorComputesWeightAverages(t *testing.T) {
@@ -203,7 +203,7 @@ func TestTagCollectorComputesWeightAverages(t *testing.T) {
 	a.Nil(err)
 
 	a.Len(results, 1)
-	a.Equal(results[0].Name, "rock")
-	a.Equal(results[0].Statistics.Avg(), float64(20))
-	a.Equal(results[0].Statistics.Count(), 3)
+	a.Equal("rock", results[0].Name)
+	a.Equal(float64(20), results[0].Statistics.Avg())
+	a.Equal(3, results[0].Statistics.Count())
 }

@@ -20,7 +20,7 @@ type TagCollector struct {
 	inw         *sync.WaitGroup
 	closeSignal chan bool
 	closed      bool
-	tags        map[string]*utils.MovingAverage
+	tags        map[string]*utils.MovingStatistics
 }
 
 /*
@@ -37,7 +37,7 @@ Tag defines a tag and its statistics
 */
 type Tag struct {
 	Name       string
-	Statistics *utils.MovingAverage
+	Statistics *utils.MovingStatistics
 }
 
 /*
@@ -52,7 +52,7 @@ func NewTagCollector(config *TagCollectorConfig) *TagCollector {
 		inw:         &inw,
 		closeSignal: make(chan bool),
 		closed:      false,
-		tags:        make(map[string]*utils.MovingAverage),
+		tags:        make(map[string]*utils.MovingStatistics),
 	}
 }
 
@@ -111,7 +111,7 @@ func (c *TagCollector) Monitor() {
 func (c *TagCollector) handleTag(name string, weight int64) {
 	_, ok := c.tags[name]
 	if !ok {
-		c.tags[name] = utils.NewMovingAverage()
+		c.tags[name] = utils.NewMovingStatistics()
 	}
 	ma := c.tags[name]
 	ma.Add(float64(weight))
