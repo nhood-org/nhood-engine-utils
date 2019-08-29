@@ -83,7 +83,11 @@ func (t *tagCollectorWorkersPool) finalize() {
 	}
 
 	for _, t := range tags {
-		fmt.Println("Tag:", t.Name, "; Count:", t.Statistics.Count(), "; Weight:", t.Statistics.Avg())
+		fmt.Println("Tag:", t.Name,
+			"; Count:", t.Statistics.Count(),
+			"; Weight:Avg:", t.Statistics.Avg(),
+			"; Weight:Max:", t.Statistics.Max(),
+			"; Weight:Min:", t.Statistics.Min())
 	}
 }
 
