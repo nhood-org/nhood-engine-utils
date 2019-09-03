@@ -12,6 +12,7 @@ import (
 
 	"github.com/nhood-org/nhood-engine-utils/pkg/model"
 	"github.com/nhood-org/nhood-engine-utils/pkg/service"
+	"github.com/nhood-org/nhood-engine-utils/pkg/utils"
 )
 
 const supportedExtension = ".json"
@@ -32,8 +33,15 @@ type tagCollectorWorkersPool struct {
 	jobNOKCounter int
 }
 
+type tagCollectorCommandArguments struct {
+	Root           string
+	Output         string
+	CountThreshold int
+}
+
 type tagCollectorWorkersEnvironment struct {
 	collector *service.TagCollector
+	args      *tagCollectorCommandArguments
 }
 
 func newTagCollectorWorkersPool(env *tagCollectorWorkersEnvironment) *tagCollectorWorkersPool {
@@ -82,13 +90,28 @@ func (t *tagCollectorWorkersPool) finalize() {
 		panic(err)
 	}
 
+	out, err := utils.NewOutputFile(t.env.args.Output)
+	if err != nil {
+		panic(err)
+	}
+
+	defer out.Close()
+
+	count := 0
 	for _, t := range tags {
-		fmt.Println("Tag:", t.Name,
+		line := fmt.Sprint("Tag:", t.Name,
 			"; Count:", t.Statistics.Count(),
 			"; Weight:Avg:", t.Statistics.Avg(),
 			"; Weight:Max:", t.Statistics.Max(),
 			"; Weight:Min:", t.Statistics.Min())
+		err = out.Append(line)
+		if err != nil {
+			panic(err)
+		}
+		count++
 	}
+
+	fmt.Printf("Collected %d tags\n", count)
 }
 
 func (t *tagCollectorWorkersPool) handleJob(job *tagCollectorWorkerJob) {
