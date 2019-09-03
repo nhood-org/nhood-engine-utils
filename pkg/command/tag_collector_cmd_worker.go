@@ -95,7 +95,12 @@ func (t *tagCollectorWorkersPool) finalize() {
 		panic(err)
 	}
 
-	defer out.Close()
+	defer func() {
+		err = out.Close()
+		if err != nil {
+			panic(err)
+		}
+	}()
 
 	count := 0
 	for _, t := range tags {
