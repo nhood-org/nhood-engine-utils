@@ -19,17 +19,13 @@ func execute(cmd *cobra.Command, cmdArgs []string) {
 	collector := service.NewTagCollector(collectorConfig)
 	env := &tagCollectorWorkersEnvironment{
 		collector: collector,
+		args:      args,
 	}
 	workers := newTagCollectorWorkersPool(env)
 
 	workers.run()
 	go workers.handleRootPath(args.Root)
 	workers.finalize()
-}
-
-type tagCollectorCommandArguments struct {
-	Root           string
-	CountThreshold int
 }
 
 func resolveArguments(cmd *cobra.Command, args []string) (*tagCollectorCommandArguments, error) {
@@ -51,8 +47,11 @@ func resolveArguments(cmd *cobra.Command, args []string) (*tagCollectorCommandAr
 		return nil, errors.New("threshold flag is invalid")
 	}
 
+	output := cmd.Flag("output").Value.String()
+
 	return &tagCollectorCommandArguments{
 		Root:           root,
+		Output:         output,
 		CountThreshold: threshold,
 	}, nil
 }

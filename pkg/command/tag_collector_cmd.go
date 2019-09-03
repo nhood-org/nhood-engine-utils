@@ -17,7 +17,8 @@ func NewTagCollectorCommand() *cobra.Command {
 		Args:  cobra.MinimumNArgs(1),
 		Run:   execute,
 	}
-	cmd.Flags().UintP("threshold", "t", 3000, "count threshold. Tags with lower count will not be displayed")
+	cmd.Flags().UintP("threshold", "t", 3000, "count threshold. Tags with lower count will not be collected")
+	cmd.Flags().StringP("output", "o", "tags.out", "output file")
 
 	return cmd
 }
