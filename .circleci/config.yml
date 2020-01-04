@@ -1,0 +1,29 @@
+defaults: &defaults
+  docker:
+  - image: circleci/golang:1.13
+  working_directory: /go/src/github.com/nhood-org/nhood-engine-utils
+
+version: 2
+
+jobs:
+  build:
+    <<: *defaults
+    steps:
+    - checkout
+    - restore_cache:
+        keys:
+        - v1-pkg-cache
+    - run: make
+    - save_cache:
+        key: v1-pkg-cache
+        paths:
+        - "vendor"
+
+  release:
+    <<: *defaults
+    steps:
+    - checkout
+    - run: git config --global user.email "$GITHUB_EMAIL"
+    - run: git config --global user.name "$GITHUB_USERNAME"
+    - run: git tag -a v$VERSION -m "$VERSION"
+    - run: git push --tags https://${GITHUB_TOKEN}@github.com/nhood-org/nhood-engine-utils.git $(git rev-parse --abbrev-ref HEAD)
