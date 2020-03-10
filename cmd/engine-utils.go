@@ -6,6 +6,7 @@ import (
 
 	"github.com/nhood-org/nhood-engine-utils/pkg/command/gen/gtracks"
 	"github.com/nhood-org/nhood-engine-utils/pkg/command/gen/gvec"
+	"github.com/nhood-org/nhood-engine-utils/pkg/command/gen/w2v"
 	"github.com/nhood-org/nhood-engine-utils/pkg/command/map/mtags"
 	"github.com/nhood-org/nhood-engine-utils/pkg/command/map/mtracks"
 
@@ -28,6 +29,7 @@ func main() {
 	rootCmd.AddCommand(gvec.NewCommand())
 	rootCmd.AddCommand(mtags.NewCommand())
 	rootCmd.AddCommand(mtracks.NewCommand())
+	rootCmd.AddCommand(w2v.NewCommand())
 	err := rootCmd.Execute()
 	if err != nil {
 		panic(err)
