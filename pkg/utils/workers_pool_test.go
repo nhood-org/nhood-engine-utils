@@ -72,11 +72,11 @@ func TestWorkerCountsOKJobs(t *testing.T) {
 	}
 	workers.done()
 
-	expectedNOKCount := 0
-	expectedOKCount := jobCount
+	expectedAllCount := jobCount
+	expectedErrorCount := 0
 
-	a.Equal(expectedOKCount, workers.jobOKCounter)
-	a.Equal(expectedNOKCount, workers.jobNOKCounter)
+	a.Equal(expectedAllCount, workers.jobAllCounter)
+	a.Equal(expectedErrorCount, workers.jobErrorCounter)
 }
 
 type TestNOKJob struct{}
@@ -106,9 +106,9 @@ func TestWorkerCountsNOKJobs(t *testing.T) {
 	}
 	workers.done()
 
-	expectedNOKCount := jobCount / jobFailureRatio
-	expectedOKCount := jobCount - expectedNOKCount
+	expectedAllCount := jobCount
+	expectedErrorCount := jobCount / jobFailureRatio
 
-	a.Equal(expectedOKCount, workers.jobOKCounter)
-	a.Equal(expectedNOKCount, workers.jobNOKCounter)
+	a.Equal(expectedAllCount, workers.jobAllCounter)
+	a.Equal(expectedErrorCount, workers.jobErrorCounter)
 }

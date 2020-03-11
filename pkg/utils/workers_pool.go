@@ -14,23 +14,23 @@ type Job interface {
 }
 
 type workerPool struct {
-	size          int
-	jobs          chan Job
-	jobMonitor    *sync.WaitGroup
-	jobOKSignal   chan bool
-	jobOKCounter  int
-	jobNOKCounter int
+	size            int
+	jobs            chan Job
+	jobMonitor      *sync.WaitGroup
+	jobReturnSignal chan error
+	jobAllCounter   int
+	jobErrorCounter int
 }
 
 func newWorkerPool(size int) *workerPool {
 	var jobMonitor sync.WaitGroup
 	return &workerPool{
-		size:          size,
-		jobs:          make(chan Job),
-		jobMonitor:    &jobMonitor,
-		jobOKSignal:   make(chan bool),
-		jobOKCounter:  0,
-		jobNOKCounter: 0,
+		size:            size,
+		jobs:            make(chan Job),
+		jobMonitor:      &jobMonitor,
+		jobReturnSignal: make(chan error),
+		jobAllCounter:   0,
+		jobErrorCounter: 0,
 	}
 }
 
@@ -49,30 +49,25 @@ func (t *workerPool) addJob(job Job) {
 func (t *workerPool) done() {
 	t.jobMonitor.Wait()
 	close(t.jobs)
-	close(t.jobOKSignal)
+	close(t.jobReturnSignal)
 }
 
 func (t *workerPool) worker() {
 	for j := range t.jobs {
-		err := j.Handle()
-		if err != nil {
-			t.jobOKSignal <- false
-		} else {
-			t.jobOKSignal <- true
-		}
+		t.jobReturnSignal <- j.Handle()
 	}
 }
 
 func (t *workerPool) monitorJobStatus() {
-	for status := range t.jobOKSignal {
-		if status {
-			t.jobOKCounter++
-		} else {
-			t.jobNOKCounter++
+	for err := range t.jobReturnSignal {
+		t.jobAllCounter++
+		if err != nil {
+			t.jobErrorCounter++
+			log.Println("error: " + err.Error())
 		}
-		if (t.jobOKCounter > 0 && t.jobOKCounter%1000 == 0) || (t.jobNOKCounter > 0 && t.jobNOKCounter%1000 == 0) {
-			log.Println("Processed:", t.jobOKCounter, "jobs with [OK] status")
-			log.Println("Processed:", t.jobNOKCounter, "jobs with [NOK] status")
+		if t.jobAllCounter > 0 && t.jobAllCounter%1000 == 0 {
+			log.Println("Processed:", t.jobAllCounter, "jobs")
+			log.Println("Processed:", t.jobErrorCounter, "jobs with error")
 		}
 		t.jobMonitor.Done()
 	}
