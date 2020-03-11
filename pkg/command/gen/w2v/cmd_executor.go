@@ -8,15 +8,24 @@ import (
 	"github.com/nhood-org/nhood-engine-utils/pkg/model"
 	"github.com/nhood-org/nhood-engine-utils/pkg/utils"
 	"github.com/spf13/cobra"
+	"github.com/ynqa/wego/pkg/builder"
+	"github.com/ynqa/wego/pkg/model/word2vec"
 )
+
+const defaultPoolSize = 8
 
 type job struct {
 	out   chan model.RawTrack
 	outWg *sync.WaitGroup
 	path  string
+	info  os.FileInfo
 }
 
 func (j job) Handle() error {
+	if j.info.IsDir() {
+		return nil
+	}
+
 	raw, err := model.ReadRawTrackFromFile(j.path)
 	if err != nil {
 		return err
@@ -38,6 +47,7 @@ func (f jobFactory) Create(path string, info os.FileInfo) (utils.Job, error) {
 		out:   f.out,
 		outWg: f.outWg,
 		path:  path,
+		info:  info,
 	}, nil
 }
 
@@ -47,8 +57,11 @@ func execute(cmd *cobra.Command, cmdArgs []string) {
 		panic(err)
 	}
 
-	defaultPoolSize := 5
+	createCorpus(args)
+	generateVectors(args)
+}
 
+func createCorpus(args *word2VecCommandArguments) {
 	var outWg sync.WaitGroup
 	out := make(chan model.RawTrack)
 
@@ -57,26 +70,28 @@ func execute(cmd *cobra.Command, cmdArgs []string) {
 		out:   out,
 	}
 
-	f, err := os.OpenFile(args.Output, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0600)
+	fName := getCorpusFileName(args.Output)
+	f, err := os.Create(fName)
 	if err != nil {
 		panic(err)
 	}
-
 	defer f.Close()
 
 	go func() {
 		for {
 			o := <-out
 
-			s := "track of ID " + o.ID + " is tagged as "
+			var s string
 			for _, t := range o.Tags {
-				s += t[0] + " "
+				s += fmt.Sprintf("%s tagged as %s\n", o.ID, t[0])
 			}
-			s += "and similar to "
 			for _, id := range o.SimilarIDs {
-				s += id[0].(string) + " "
+				s += fmt.Sprintf("%s similar to %s\n", o.ID, id[0].(string))
 			}
-			fmt.Fprint(f, s)
+
+			if s != "" {
+				fmt.Fprint(f, s)
+			}
 
 			outWg.Done()
 		}
@@ -86,4 +101,36 @@ func execute(cmd *cobra.Command, cmdArgs []string) {
 	pathWalker.Execute()
 
 	outWg.Wait()
+}
+
+func generateVectors(args *word2VecCommandArguments) {
+	m, err := builder.NewWord2vecBuilder().
+		Dimension(args.Size).
+		Window(5).
+		Model(word2vec.CBOW).
+		Optimizer(word2vec.NEGATIVE_SAMPLING).
+		NegativeSampleSize(5).
+		Verbose().
+		Build()
+	if err != nil {
+		panic(err)
+	}
+
+	fName := getCorpusFileName(args.Output)
+	f, err := os.Open(fName)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+
+	err = m.Train(f)
+	if err != nil {
+		panic(err)
+	}
+
+	m.Save(args.Output)
+}
+
+func getCorpusFileName(output string) string {
+	return "corpus_" + output
 }

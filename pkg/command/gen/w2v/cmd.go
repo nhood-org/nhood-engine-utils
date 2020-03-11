@@ -5,7 +5,10 @@ import (
 )
 
 const outputFlagName = "output"
-const outputDefault = "corpus-generated.out"
+const outputDefault = "word2vec.out"
+
+const vectorSizeFlagName = "size"
+const vectorSizeDefault = 15
 
 /*
 NewCommand returns an instance of a cobra.Command
@@ -21,5 +24,6 @@ func NewCommand() *cobra.Command {
 		Run:   execute,
 	}
 	cmd.Flags().StringP(outputFlagName, "o", outputDefault, "output file")
+	cmd.Flags().Uint(vectorSizeFlagName, vectorSizeDefault, "generated vector size")
 	return cmd
 }
