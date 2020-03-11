@@ -1,6 +1,6 @@
 module github.com/nhood-org/nhood-engine-utils
 
-go 1.13
+go 1.14
 
 require (
 	github.com/awalterschulze/gographviz v0.0.0-20190522210029-fa59802746ab // indirect
@@ -17,14 +17,9 @@ require (
 	github.com/peterh/liner v1.2.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/shopspring/decimal v0.0.0-20191130220710-360f2bc03045
-	github.com/spf13/afero v1.2.2 // indirect
-	github.com/spf13/cast v1.3.1 // indirect
 	github.com/spf13/cobra v0.0.6
-	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/spf13/viper v1.6.2 // indirect
-	github.com/stretchr/testify v1.4.0
-	github.com/ugorji/go/codec v0.0.0-20181204163529-d75b2dcb6bc8 // indirect
+	github.com/stretchr/testify v1.5.1
 	github.com/ynqa/wego v0.0.0-20191226161829-bbae3aa4ad7d
 	go.uber.org/goleak v0.10.0
 	golang.org/x/sys v0.0.0-20200302150141-5c8b2ff67527 // indirect
