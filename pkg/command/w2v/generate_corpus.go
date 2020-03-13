@@ -20,14 +20,14 @@ func generateCorpus(args word2VecCommandArguments) {
 	}
 
 	tracksFileName := getTracksFileName(args.Output)
-	fTracks, err := os.Open(tracksFileName)
+	fTracks, err := os.Create(tracksFileName)
 	if err != nil {
 		panic(err)
 	}
 	defer fTracks.Close()
 
 	corpusFileName := getCorpusFileName(args.Output)
-	fCorpus, err := os.Open(corpusFileName)
+	fCorpus, err := os.Create(corpusFileName)
 	if err != nil {
 		panic(err)
 	}
