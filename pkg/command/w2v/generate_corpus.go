@@ -36,14 +36,14 @@ func generateCorpus(args word2VecCommandArguments) {
 	go func() {
 		for {
 			o := <-out
-			fmt.Fprintf(fTracks, "%s, %s, %s", o.ID, o.Artist, o.Title)
+			fmt.Fprintf(fTracks, "%s, %s, %s\n", o.ID, o.Artist, o.Title)
 
 			var s string
 			for _, t := range o.Tags {
-				appendTag(args, o.ID, &s, t)
+				s = appendTag(args, o.ID, s, t)
 			}
 			for _, id := range o.SimilarIDs {
-				appendSimilarID(args, o.ID, &s, id)
+				s = appendSimilarID(args, o.ID, s, id)
 			}
 
 			if s != "" {
@@ -60,26 +60,24 @@ func generateCorpus(args word2VecCommandArguments) {
 	outWg.Wait()
 }
 
-func appendTag(args word2VecCommandArguments, trackID string, s *string, tag []string) {
+func appendTag(args word2VecCommandArguments, trackID string, s string, tag []string) string {
 	tagWeight, err := strconv.Atoi(tag[1])
 	if err != nil {
-		return
+		return s
 	}
 	if tagWeight < args.ThresholdTag {
-		return
+		return s
 	}
-	modified := *s + fmt.Sprintf("%s tagged as %s\n", trackID, tag[0])
-	s = &modified
+	return s + fmt.Sprintf("%s tagged as %s\n", trackID, tag[0])
 }
 
-func appendSimilarID(args word2VecCommandArguments, trackID string, s *string, id []interface{}) {
+func appendSimilarID(args word2VecCommandArguments, trackID string, s string, id []interface{}) string {
 	similarityWeight, err := strconv.ParseFloat(fmt.Sprintf("%v", id[1]), 64)
 	if err != nil {
-		return
+		return s
 	}
 	if similarityWeight < args.ThresholdSimilarity {
-		return
+		return s
 	}
-	modified := *s + fmt.Sprintf("%s similar to %s\n", trackID, id[0].(string))
-	s = &modified
+	return s + fmt.Sprintf("%s similar to %s\n", trackID, id[0].(string))
 }
