@@ -20,6 +20,7 @@ func main() {
 	}()
 
 	defer handleErrors()
+
 	var rootCmd = &cobra.Command{Use: appName}
 	rootCmd.AddCommand(w2v.NewCommand())
 	err := rootCmd.Execute()
