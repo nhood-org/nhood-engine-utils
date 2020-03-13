@@ -4,11 +4,10 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/nhood-org/nhood-engine-utils/pkg/command/gen/w2v"
-
 	"net/http"
 	_ "net/http/pprof"
 
+	"github.com/nhood-org/nhood-engine-utils/pkg/command/w2v"
 	"github.com/spf13/cobra"
 )
 
