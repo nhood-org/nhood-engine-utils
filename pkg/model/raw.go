@@ -38,3 +38,10 @@ func ReadRawTrackFromFile(fileName string) (*RawTrack, error) {
 
 	return &c, nil
 }
+
+func finalize(file *os.File) {
+	err := file.Close()
+	if err != nil {
+		panic(err)
+	}
+}
