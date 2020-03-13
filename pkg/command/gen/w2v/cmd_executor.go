@@ -3,6 +3,7 @@ package w2v
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"sync"
 
 	"github.com/nhood-org/nhood-engine-utils/pkg/model"
@@ -61,7 +62,7 @@ func execute(cmd *cobra.Command, cmdArgs []string) {
 	generateVectors(args)
 }
 
-func createCorpus(args *word2VecCommandArguments) {
+func createCorpus(args word2VecCommandArguments) {
 	var outWg sync.WaitGroup
 	out := make(chan model.RawTrack)
 
@@ -70,27 +71,35 @@ func createCorpus(args *word2VecCommandArguments) {
 		out:   out,
 	}
 
-	fName := getCorpusFileName(args.Output)
-	f, err := os.Create(fName)
+	tracksFileName := getTracksFileName(args.Output)
+	fTracks, err := os.Open(tracksFileName)
 	if err != nil {
 		panic(err)
 	}
-	defer f.Close()
+	defer fTracks.Close()
+
+	corpusFileName := getCorpusFileName(args.Output)
+	fCorpus, err := os.Open(corpusFileName)
+	if err != nil {
+		panic(err)
+	}
+	defer fCorpus.Close()
 
 	go func() {
 		for {
 			o := <-out
+			fmt.Fprintf(fTracks, "%s, %s, %s", o.ID, o.Artist, o.Title)
 
 			var s string
 			for _, t := range o.Tags {
-				s += fmt.Sprintf("%s tagged as %s\n", o.ID, t[0])
+				appendTag(args, o.ID, &s, t)
 			}
 			for _, id := range o.SimilarIDs {
-				s += fmt.Sprintf("%s similar to %s\n", o.ID, id[0].(string))
+				appendSimilarID(args, o.ID, &s, id)
 			}
 
 			if s != "" {
-				fmt.Fprint(f, s)
+				fmt.Fprint(fCorpus, s)
 			}
 
 			outWg.Done()
@@ -103,7 +112,7 @@ func createCorpus(args *word2VecCommandArguments) {
 	outWg.Wait()
 }
 
-func generateVectors(args *word2VecCommandArguments) {
+func generateVectors(args word2VecCommandArguments) {
 	m, err := builder.NewWord2vecBuilder().
 		Dimension(args.Size).
 		Window(5).
@@ -116,8 +125,8 @@ func generateVectors(args *word2VecCommandArguments) {
 		panic(err)
 	}
 
-	fName := getCorpusFileName(args.Output)
-	f, err := os.Open(fName)
+	corpusFileName := getCorpusFileName(args.Output)
+	f, err := os.Open(corpusFileName)
 	if err != nil {
 		panic(err)
 	}
@@ -128,9 +137,42 @@ func generateVectors(args *word2VecCommandArguments) {
 		panic(err)
 	}
 
-	m.Save(args.Output)
+	out := getVectorsFileName(args.Output)
+	m.Save(out)
+}
+
+func appendTag(args word2VecCommandArguments, trackID string, s *string, tag []string) {
+	tagWeight, err := strconv.Atoi(tag[1])
+	if err != nil {
+		return
+	}
+	if tagWeight < args.ThresholdTag {
+		return
+	}
+	modified := *s + fmt.Sprintf("%s tagged as %s\n", trackID, tag[0])
+	s = &modified
+}
+
+func appendSimilarID(args word2VecCommandArguments, trackID string, s *string, id []interface{}) {
+	similarityWeight, err := strconv.ParseFloat(fmt.Sprintf("%v", id[1]), 64)
+	if err != nil {
+		return
+	}
+	if similarityWeight < args.ThresholdSimilarity {
+		return
+	}
+	modified := *s + fmt.Sprintf("%s similar to %s\n", trackID, id[0].(string))
+	s = &modified
 }
 
 func getCorpusFileName(output string) string {
 	return "corpus_" + output
+}
+
+func getTracksFileName(output string) string {
+	return "tracks_" + output
+}
+
+func getVectorsFileName(output string) string {
+	return "vectors_" + output
 }
