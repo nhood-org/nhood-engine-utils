@@ -1,4 +1,5 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Version](https://img.shields.io/badge/version-0.0.1-blue.svg?maxAge=2592000)](https://github.com/nhood-org/nhood-engine-utils/releases/tag/v0.0.1)
 [![CircleCI](https://circleci.com/gh/nhood-org/nhood-engine-utils.svg?style=shield)](https://circleci.com/gh/nhood-org/nhood-engine-utils)
 [![Go Report Card](https://goreportcard.com/badge/github.com/nhood-org/nhood-engine-utils)](https://goreportcard.com/report/github.com/nhood-org/nhood-engine-utils)
 
@@ -57,7 +58,7 @@ Configuration of CI is implemented in `.circleci/config.yml`.
 In order to release version, send the following API request to circleCI:
 
 ```bash
-curl -u <CIRCLE_CI_USER_TOKEN> \
+curl -u $CIRCLE_CI_USER_TOKEN: \
     -d build_parameters[CIRCLE_JOB]=release \
     -d build_parameters[VERSION]=<NEW_VERSION> \
     https://circleci.com/api/v1.1/project/github/nhood-org/nhood-engine-utils/tree/master
