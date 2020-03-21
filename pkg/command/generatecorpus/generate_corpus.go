@@ -11,10 +11,6 @@ import (
 	"github.com/nhood-org/nhood-engine-utils/pkg/utils"
 )
 
-const (
-	initialBufferSize = 1000 * 1000 * 1000
-)
-
 func generateCorpus(args generateCorpusCommandArguments) {
 	var outWg sync.WaitGroup
 	out := make(chan model.RawTrack)
@@ -24,11 +20,8 @@ func generateCorpus(args generateCorpusCommandArguments) {
 		out:   out,
 	}
 
-	tracksBytes := make([]byte, initialBufferSize)
-	tracks := bytes.NewBuffer(tracksBytes)
-
-	corpusBytes := make([]byte, initialBufferSize)
-	corpus := bytes.NewBuffer(corpusBytes)
+	tracks := new(bytes.Buffer)
+	corpus := new(bytes.Buffer)
 
 	go func() {
 		for {
