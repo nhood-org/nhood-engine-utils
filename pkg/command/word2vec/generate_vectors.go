@@ -1,4 +1,4 @@
-package w2v
+package word2vec
 
 import (
 	"os"
@@ -20,8 +20,7 @@ func generateVectors(args word2VecCommandArguments) {
 		panic(err)
 	}
 
-	corpusFileName := getCorpusFileName(args.Output)
-	f, err := os.Open(corpusFileName)
+	f, err := os.Open(args.Corpus)
 	if err != nil {
 		panic(err)
 	}
@@ -32,6 +31,5 @@ func generateVectors(args word2VecCommandArguments) {
 		panic(err)
 	}
 
-	out := getVectorsFileName(args.Output)
-	m.Save(out)
+	m.Save(args.Output)
 }

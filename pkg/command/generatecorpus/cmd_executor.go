@@ -1,4 +1,4 @@
-package w2v
+package generatecorpus
 
 import (
 	"os"
@@ -55,17 +55,4 @@ func execute(cmd *cobra.Command, cmdArgs []string) {
 	}
 
 	generateCorpus(args)
-	generateVectors(args)
-}
-
-func getCorpusFileName(output string) string {
-	return "corpus_" + output
-}
-
-func getTracksFileName(output string) string {
-	return "tracks_" + output
-}
-
-func getVectorsFileName(output string) string {
-	return "vectors_" + output
 }
