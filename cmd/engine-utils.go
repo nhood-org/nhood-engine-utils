@@ -7,7 +7,8 @@ import (
 	"net/http"
 	_ "net/http/pprof"
 
-	"github.com/nhood-org/nhood-engine-utils/pkg/command/w2v"
+	"github.com/nhood-org/nhood-engine-utils/pkg/command/generatecorpus"
+	"github.com/nhood-org/nhood-engine-utils/pkg/command/word2vec"
 	"github.com/spf13/cobra"
 )
 
@@ -21,7 +22,8 @@ func main() {
 	defer handleErrors()
 
 	var rootCmd = &cobra.Command{Use: appName}
-	rootCmd.AddCommand(w2v.NewCommand())
+	rootCmd.AddCommand(generatecorpus.NewCommand())
+	rootCmd.AddCommand(word2vec.NewCommand())
 	err := rootCmd.Execute()
 	if err != nil {
 		panic(err)

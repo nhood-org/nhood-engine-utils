@@ -1,6 +1,7 @@
-package w2v
+package generatecorpus
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"strconv"
@@ -10,7 +11,11 @@ import (
 	"github.com/nhood-org/nhood-engine-utils/pkg/utils"
 )
 
-func generateCorpus(args word2VecCommandArguments) {
+const (
+	initialBufferSize = 1000 * 1000 * 1000
+)
+
+func generateCorpus(args generateCorpusCommandArguments) {
 	var outWg sync.WaitGroup
 	out := make(chan model.RawTrack)
 
@@ -19,24 +24,16 @@ func generateCorpus(args word2VecCommandArguments) {
 		out:   out,
 	}
 
-	tracksFileName := getTracksFileName(args.Output)
-	fTracks, err := os.Create(tracksFileName)
-	if err != nil {
-		panic(err)
-	}
-	defer fTracks.Close()
+	tracksBytes := make([]byte, initialBufferSize)
+	tracks := bytes.NewBuffer(tracksBytes)
 
-	corpusFileName := getCorpusFileName(args.Output)
-	fCorpus, err := os.Create(corpusFileName)
-	if err != nil {
-		panic(err)
-	}
-	defer fCorpus.Close()
+	corpusBytes := make([]byte, initialBufferSize)
+	corpus := bytes.NewBuffer(corpusBytes)
 
 	go func() {
 		for {
 			o := <-out
-			fmt.Fprintf(fTracks, "%s, %s, %s\n", o.ID, o.Artist, o.Title)
+			fmt.Fprintf(tracks, "%s, %s, %s\n", o.ID, o.Artist, o.Title)
 
 			var s string
 			for _, t := range o.Tags {
@@ -47,7 +44,7 @@ func generateCorpus(args word2VecCommandArguments) {
 			}
 
 			if s != "" {
-				fmt.Fprint(fCorpus, s)
+				fmt.Fprint(corpus, s)
 			}
 
 			outWg.Done()
@@ -58,9 +55,25 @@ func generateCorpus(args word2VecCommandArguments) {
 	pathWalker.Execute()
 
 	outWg.Wait()
+
+	fTracks, err := os.Create(args.TracksOutput)
+	if err != nil {
+		panic(err)
+	}
+	defer fTracks.Close()
+
+	tracks.WriteTo(fTracks)
+
+	fCorpus, err := os.Create(args.Output)
+	if err != nil {
+		panic(err)
+	}
+	defer fCorpus.Close()
+
+	corpus.WriteTo(fCorpus)
 }
 
-func appendTag(args word2VecCommandArguments, trackID string, s string, tag []string) string {
+func appendTag(args generateCorpusCommandArguments, trackID string, s string, tag []string) string {
 	tagWeight, err := strconv.Atoi(tag[1])
 	if err != nil {
 		return s
@@ -71,7 +84,7 @@ func appendTag(args word2VecCommandArguments, trackID string, s string, tag []st
 	return s + fmt.Sprintf("%s tagged as %s\n", trackID, tag[0])
 }
 
-func appendSimilarID(args word2VecCommandArguments, trackID string, s string, id []interface{}) string {
+func appendSimilarID(args generateCorpusCommandArguments, trackID string, s string, id []interface{}) string {
 	similarityWeight, err := strconv.ParseFloat(fmt.Sprintf("%v", id[1]), 64)
 	if err != nil {
 		return s
