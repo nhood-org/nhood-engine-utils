@@ -7,8 +7,8 @@ import (
 	"net/http"
 	_ "net/http/pprof"
 
-	"github.com/nhood-org/nhood-engine-utils/pkg/command/generatecorpus"
-	"github.com/nhood-org/nhood-engine-utils/pkg/command/word2vec"
+	"github.com/nhood-org/nhood-engine-utils/pkg/ports/cobra/generatecorpus"
+	"github.com/nhood-org/nhood-engine-utils/pkg/ports/cobra/word2vec"
 	"github.com/spf13/cobra"
 )
 

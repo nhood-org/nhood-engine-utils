@@ -6,7 +6,6 @@ import (
 
 	"github.com/nhood-org/nhood-engine-utils/pkg/model"
 	"github.com/nhood-org/nhood-engine-utils/pkg/utils"
-	"github.com/spf13/cobra"
 )
 
 const defaultPoolSize = 8
@@ -46,13 +45,4 @@ func (f jobFactory) Create(path string, info os.FileInfo) (utils.Job, error) {
 		path:  path,
 		info:  info,
 	}, nil
-}
-
-func execute(cmd *cobra.Command, cmdArgs []string) {
-	args, err := resolveArguments(cmd, cmdArgs)
-	if err != nil {
-		panic(err)
-	}
-
-	generateCorpus(args)
 }

@@ -5,10 +5,6 @@ import (
 	"os"
 )
 
-/*
-RawTrack defines a track entity within the input data files
-
-*/
 type RawTrack struct {
 	ID         string          `json:"track_id"`
 	SimilarIDs [][]interface{} `json:"similars"`
@@ -17,10 +13,6 @@ type RawTrack struct {
 	Tags       [][]string      `json:"tags"`
 }
 
-/*
-ReadRawTrackFromFile reads track from given json file
-
-*/
 func ReadRawTrackFromFile(fileName string) (*RawTrack, error) {
 	file, err := os.Open(fileName)
 	if err != nil {
