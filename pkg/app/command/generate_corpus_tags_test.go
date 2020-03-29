@@ -44,10 +44,15 @@ func Test_GenerateCorpusTagsCommandHandler_Handle(t *testing.T) {
 
 	outString := string(outBytes)
 	for _, s := range strings.Split(outString, " ") {
+		if s == "" {
+			continue
+		}
+
 		require.NotContains(t, tagsCaptured, s)
 		tagsCaptured[s] = true
 	}
 
+	require.Len(t, tagsCaptured, 4)
 	require.Contains(t, tagsCaptured, "TAG_A")
 	require.Contains(t, tagsCaptured, "TAG_B")
 	require.Contains(t, tagsCaptured, "TAG_C")
