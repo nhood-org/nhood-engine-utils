@@ -12,6 +12,5 @@ if [ -z "$INPUT_DATA" ]
     INPUT_DATA="./test_data/"
 fi
 
-
 $CMD generate-corpus $INPUT_DATA --mode=TAGS
 $CMD word2vec corpus.out --size=15
