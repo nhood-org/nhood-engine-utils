@@ -13,4 +13,4 @@ if [ -z "$INPUT_DATA" ]
 fi
 
 $CMD generate-corpus $INPUT_DATA --mode=TAGS
-$CMD word2vec corpus.out --size=15
+$CMD glove corpus.out
