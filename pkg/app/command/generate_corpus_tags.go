@@ -3,6 +3,7 @@ package command
 import (
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/nhood-org/nhood-engine-utils/pkg/model"
 )
@@ -24,18 +25,21 @@ func NewGenerateCorpusTagsCommandHandler() GenerateCorpusTagsCommandHandler {
 }
 
 func (h generateCorpusTagsCommandHandler) Handle(cmd GenerateCorpusTagsCmd) error {
-	tags := make(map[string]bool)
-
 	for _, t := range cmd.Tracks {
-		for tag := range t.Tags {
-			if _, ok := tags[tag]; !ok {
-				tags[tag] = true
-			}
-		}
-	}
+		tags := make([]string, len(t.Tags))
 
-	for tag := range tags {
-		fmt.Fprintf(cmd.Corpus, "%s ", tag)
+		if len(t.Tags) == 0 {
+			continue
+		}
+
+		i := 0
+		for tag := range t.Tags {
+			tags[i] = tag
+			i++
+		}
+
+		fmt.Fprintf(cmd.Corpus, strings.Join(tags, " "))
+		fmt.Fprintf(cmd.Corpus, "\n")
 	}
 
 	return nil

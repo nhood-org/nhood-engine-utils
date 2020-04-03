@@ -40,21 +40,40 @@ func Test_GenerateCorpusTagsCommandHandler_Handle(t *testing.T) {
 	outBytes, err := ioutil.ReadAll(out)
 	require.NoError(t, err)
 
-	tagsCaptured := make(map[string]bool)
-
 	outString := string(outBytes)
-	for _, s := range strings.Split(outString, " ") {
-		if s == "" {
-			continue
+	outStringLines := strings.Split(outString, "\n")
+	require.Len(t, outStringLines, 3)
+	require.Empty(t, outStringLines[2])
+
+	lineTagsCaptured := make(map[string]bool)
+	line := strings.Split(outStringLines[0], " ")
+	for _, tag := range line {
+		_, exists := lineTagsCaptured[tag]
+		if exists {
+			require.FailNowf(t, "tag %s duplicated in line %s", tag, lineTagsCaptured)
 		}
 
-		require.NotContains(t, tagsCaptured, s)
-		tagsCaptured[s] = true
+		lineTagsCaptured[tag] = true
 	}
 
-	require.Len(t, tagsCaptured, 4)
-	require.Contains(t, tagsCaptured, "TAG_A")
-	require.Contains(t, tagsCaptured, "TAG_B")
-	require.Contains(t, tagsCaptured, "TAG_C")
-	require.Contains(t, tagsCaptured, "TAG_D")
+	require.Len(t, lineTagsCaptured, 3)
+	require.Contains(t, lineTagsCaptured, "TAG_A")
+	require.Contains(t, lineTagsCaptured, "TAG_B")
+	require.Contains(t, lineTagsCaptured, "TAG_C")
+
+	lineTagsCaptured = make(map[string]bool)
+	line = strings.Split(outStringLines[1], " ")
+	for _, tag := range line {
+		_, exists := lineTagsCaptured[tag]
+		if exists {
+			require.FailNowf(t, "tag %s duplicated in line %s", tag, lineTagsCaptured)
+		}
+
+		lineTagsCaptured[tag] = true
+	}
+
+	require.Len(t, lineTagsCaptured, 3)
+	require.Contains(t, lineTagsCaptured, "TAG_B")
+	require.Contains(t, lineTagsCaptured, "TAG_C")
+	require.Contains(t, lineTagsCaptured, "TAG_D")
 }
