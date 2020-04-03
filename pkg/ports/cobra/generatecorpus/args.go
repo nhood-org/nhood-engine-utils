@@ -8,9 +8,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const (
+	modeFull = "FULL"
+	modeTags = "TAGS"
+)
+
 type commandArguments struct {
 	root                string
 	output              string
+	mode                string
 	thresholdTag        float64
 	thresholdSimilarity float64
 }
@@ -29,6 +35,18 @@ func resolveArguments(cmd *cobra.Command, args []string) (commandArguments, erro
 		return commandArguments{}, errors.New("could not check '" + root + "' file")
 	}
 
+	var mode string
+
+	modeVal := cmd.Flag(modeFlagName).Value.String()
+	switch modeVal {
+	case modeFull:
+		mode = modeFull
+	case modeTags:
+		mode = modeTags
+	default:
+		return commandArguments{}, errors.New("unknown mode: " + modeVal)
+	}
+
 	thresholdTagInt, err := strconv.Atoi(cmd.Flag(thresholdTagsFlagName).Value.String())
 	if err != nil {
 		return commandArguments{}, errors.New("threshold flag is invalid")
@@ -45,6 +63,7 @@ func resolveArguments(cmd *cobra.Command, args []string) (commandArguments, erro
 	return commandArguments{
 		root:                root,
 		output:              corpusOut,
+		mode:                mode,
 		thresholdTag:        thresholdTag,
 		thresholdSimilarity: thresholdSimilarity,
 	}, nil
