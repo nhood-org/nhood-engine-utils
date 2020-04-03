@@ -3,45 +3,38 @@ package command
 import (
 	"io"
 
-	"github.com/ynqa/wego/pkg/builder"
-	"github.com/ynqa/wego/pkg/model/glove"
+	"github.com/pkg/errors"
 )
 
-type GenerateGlobalVectorsCmd struct {
-	Size        int
-	Corpus      io.Reader
-	VectorsFile string
+type GlobalVectorsResolver interface {
+	Resolve(in io.Reader, out io.Writer) error
 }
 
-type GenerateGlobalVectorsHandler interface {
+type GenerateGlobalVectorsCmd struct {
+	Corpus io.Reader
+	Output io.Writer
+}
+
+type GenerateGlobalVectorsCommandHandler interface {
 	Handle(GenerateGlobalVectorsCmd) error
 }
 
 type generateGlobalVectorsCommandHandler struct {
+	resolver GlobalVectorsResolver
 }
 
-func NewGenerateGlobalVectorsCommandHandler() GenerateGlobalVectorsHandler {
-	return generateGlobalVectorsCommandHandler{}
+func NewGenerateGlobalVectorsCommandHandler(
+	resolver GlobalVectorsResolver,
+) GenerateGlobalVectorsCommandHandler {
+	return generateGlobalVectorsCommandHandler{
+		resolver: resolver,
+	}
 }
 
 func (h generateGlobalVectorsCommandHandler) Handle(cmd GenerateGlobalVectorsCmd) error {
-	m, err := builder.NewGloveBuilder().
-		Window(5).
-		Solver(glove.SGD).
-		Verbose().
-		Build()
+	err := h.resolver.Resolve(cmd.Corpus, cmd.Output)
 	if err != nil {
-		panic(err)
-	}
-
-	err = m.Train(cmd.Corpus)
-	if err != nil {
-		panic(err)
-	}
-
-	err = m.Save(cmd.VectorsFile)
-	if err != nil {
-		panic(err)
+		return errors.Wrap(err, "could not generate global vectors")
 	}
 
 	return nil

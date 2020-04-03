@@ -3,6 +3,7 @@ package word2vec
 import (
 	"os"
 
+	"github.com/nhood-org/nhood-engine-utils/pkg/adapters/model"
 	"github.com/nhood-org/nhood-engine-utils/pkg/app/command"
 	"github.com/spf13/cobra"
 )
@@ -40,13 +41,20 @@ func execute(cmd *cobra.Command, cmdArgs []string) {
 	}
 	defer corpus.Close()
 
+	output, err := os.Create(args.output)
+	if err != nil {
+		panic(err)
+	}
+	defer corpus.Close()
+
 	c := command.GenerateWord2VecVectorsCmd{
-		Size:        args.size,
-		Corpus:      corpus,
-		VectorsFile: args.output,
+		Size:   args.size,
+		Corpus: corpus,
+		Output: output,
 	}
 
-	err = command.NewGenerateWord2VecVectorsCommandHandler().Handle(c)
+	resolver := model.NewWord2VecVectorsResolver()
+	err = command.NewGenerateWord2VecVectorsCommandHandler(resolver).Handle(c)
 	if err != nil {
 		panic(err)
 	}

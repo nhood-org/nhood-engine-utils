@@ -3,14 +3,17 @@ package command
 import (
 	"io"
 
-	"github.com/ynqa/wego/pkg/builder"
-	"github.com/ynqa/wego/pkg/model/word2vec"
+	"github.com/pkg/errors"
 )
 
+type Word2VecVectorsCommandResolver interface {
+	Resolve(size int, in io.Reader, out io.Writer) error
+}
+
 type GenerateWord2VecVectorsCmd struct {
-	Size        int
-	Corpus      io.Reader
-	VectorsFile string
+	Size   int
+	Corpus io.Reader
+	Output io.Writer
 }
 
 type GenerateWord2VecVectorsHandler interface {
@@ -18,33 +21,21 @@ type GenerateWord2VecVectorsHandler interface {
 }
 
 type generateWord2VecVectorsCommandHandler struct {
+	resolver Word2VecVectorsCommandResolver
 }
 
-func NewGenerateWord2VecVectorsCommandHandler() GenerateWord2VecVectorsHandler {
-	return generateWord2VecVectorsCommandHandler{}
+func NewGenerateWord2VecVectorsCommandHandler(
+	resolver Word2VecVectorsCommandResolver,
+) GenerateWord2VecVectorsHandler {
+	return generateWord2VecVectorsCommandHandler{
+		resolver: resolver,
+	}
 }
 
 func (h generateWord2VecVectorsCommandHandler) Handle(cmd GenerateWord2VecVectorsCmd) error {
-	m, err := builder.NewWord2vecBuilder().
-		Dimension(cmd.Size).
-		Window(5).
-		Model(word2vec.CBOW).
-		Optimizer(word2vec.NEGATIVE_SAMPLING).
-		NegativeSampleSize(5).
-		Verbose().
-		Build()
+	err := h.resolver.Resolve(cmd.Size, cmd.Corpus, cmd.Output)
 	if err != nil {
-		panic(err)
-	}
-
-	err = m.Train(cmd.Corpus)
-	if err != nil {
-		panic(err)
-	}
-
-	err = m.Save(cmd.VectorsFile)
-	if err != nil {
-		panic(err)
+		return errors.Wrap(err, "could not generate word2vec vectors")
 	}
 
 	return nil
