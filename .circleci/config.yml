@@ -12,10 +12,10 @@ jobs:
     - checkout
     - restore_cache:
         keys:
-        - v2-pkg-cache
+        - vendor-cache-v0.3
     - run: make
     - save_cache:
-        key: v2-pkg-cache
+        key: vendor-cache-v0.3
         paths:
         - "vendor"
 
