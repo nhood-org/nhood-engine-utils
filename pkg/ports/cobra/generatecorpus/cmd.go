@@ -1,13 +1,13 @@
 package generatecorpus
 
 import (
+	"encoding/json"
 	"io"
+	"io/ioutil"
 	"os"
-	"sync"
 
 	"github.com/nhood-org/nhood-engine-utils/pkg/app/command"
 	"github.com/nhood-org/nhood-engine-utils/pkg/model"
-	"github.com/nhood-org/nhood-engine-utils/pkg/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -25,10 +25,10 @@ const (
 
 func NewCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   commandName + " [tracks files to process]",
-		Short: "Find all the tracks within the directory and transform into corpus file",
+		Use:   commandName + " [tracks file to process]",
+		Short: "Read all the tracks from input file and transform into corpus file",
 		Long: commandName +
-			" is used for mapping of all JSON track files in the given directory and transforming those into a single corpus file for further usage.",
+			" reads all the tracks from input file and transform into corpus file for further usage.",
 		Args: cobra.MinimumNArgs(1),
 		Run:  execute,
 	}
@@ -52,7 +52,7 @@ func execute(cmd *cobra.Command, cmdArgs []string) {
 		panic(err)
 	}
 
-	tracks := readInputTracks(args.root)
+	tracks := readInputTracks(args.input)
 
 	corpus, err := os.Create(args.output)
 	if err != nil {
@@ -100,29 +100,23 @@ func executeTagsMode(
 	}
 }
 
-func readInputTracks(root string) []model.Track {
-	var outWg sync.WaitGroup
-	out := make(chan model.RawTrack)
+func readInputTracks(input string) []model.Track {
+	inputFile, err := os.Open(input)
+	if err != nil {
+		panic(err)
+	}
+	defer inputFile.Close()
 
-	jobFactory := jobFactory{
-		outWg: &outWg,
-		out:   out,
+	inputBytes, err := ioutil.ReadAll(inputFile)
+	if err != nil {
+		panic(err)
 	}
 
-	tracks := make([]model.Track, 0)
-	go func() {
-		for {
-			o := <-out
-			track := model.TrackFromRaw(o)
-			tracks = append(tracks, track)
-			outWg.Done()
-		}
-	}()
-
-	pathWalker := utils.NewPathWalker(defaultPoolSize, root, jobFactory)
-	pathWalker.Execute()
-
-	outWg.Wait()
+	var tracks []model.Track
+	err = json.Unmarshal(inputBytes, &tracks)
+	if err != nil {
+		panic(err)
+	}
 
 	return tracks
 }
