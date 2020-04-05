@@ -14,7 +14,7 @@ const (
 )
 
 type commandArguments struct {
-	root                string
+	input               string
 	output              string
 	mode                string
 	thresholdTag        float64
@@ -27,12 +27,12 @@ func resolveArguments(cmd *cobra.Command, args []string) (commandArguments, erro
 		panic(err)
 	}
 
-	root := args[0]
-	if _, err := os.Stat(root); err == nil {
+	input := args[0]
+	if _, err := os.Stat(input); err == nil {
 	} else if os.IsNotExist(err) {
-		return commandArguments{}, errors.New("file '" + root + "' does not exist")
+		return commandArguments{}, errors.New("file '" + input + "' does not exist")
 	} else {
-		return commandArguments{}, errors.New("could not check '" + root + "' file")
+		return commandArguments{}, errors.New("could not check '" + input + "' file")
 	}
 
 	var mode string
@@ -61,7 +61,7 @@ func resolveArguments(cmd *cobra.Command, args []string) (commandArguments, erro
 	corpusOut := cmd.Flag(outputFlagName).Value.String()
 
 	return commandArguments{
-		root:                root,
+		input:               input,
 		output:              corpusOut,
 		mode:                mode,
 		thresholdTag:        thresholdTag,

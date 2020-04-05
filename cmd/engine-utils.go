@@ -9,6 +9,7 @@ import (
 
 	"github.com/nhood-org/nhood-engine-utils/pkg/ports/cobra/generatecorpus"
 	"github.com/nhood-org/nhood-engine-utils/pkg/ports/cobra/glove"
+	"github.com/nhood-org/nhood-engine-utils/pkg/ports/cobra/maptracks"
 	"github.com/nhood-org/nhood-engine-utils/pkg/ports/cobra/word2vec"
 	"github.com/spf13/cobra"
 )
@@ -25,6 +26,7 @@ func main() {
 	var rootCmd = &cobra.Command{Use: appName}
 	rootCmd.AddCommand(generatecorpus.NewCommand())
 	rootCmd.AddCommand(glove.NewCommand())
+	rootCmd.AddCommand(maptracks.NewCommand())
 	rootCmd.AddCommand(word2vec.NewCommand())
 	err := rootCmd.Execute()
 	if err != nil {

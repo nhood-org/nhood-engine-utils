@@ -1,4 +1,4 @@
-package generatecorpus
+package maptracks
 
 import (
 	"os"

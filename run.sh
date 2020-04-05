@@ -12,5 +12,6 @@ if [ -z "$INPUT_DATA" ]
     INPUT_DATA="./test_data/"
 fi
 
-$CMD generate-corpus $INPUT_DATA --mode=TAGS
+$CMD map-tracks $INPUT_DATA
+$CMD generate-corpus ./tracks.out --mode=TAGS
 $CMD glove corpus.out
