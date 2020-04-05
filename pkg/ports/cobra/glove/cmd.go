@@ -42,7 +42,7 @@ func execute(cmd *cobra.Command, cmdArgs []string) {
 	if err != nil {
 		panic(err)
 	}
-	defer corpus.Close()
+	defer output.Close()
 
 	c := command.GenerateGlobalVectorsCmd{
 		Corpus: corpus,

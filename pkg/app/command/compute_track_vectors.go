@@ -84,7 +84,7 @@ func renderTracksToWriter(
 ) {
 	for _, t := range tracks {
 		trackVector := trackVectors[t.ID]
-		fmt.Fprint(output, renderTrack(t, trackVector))
+		fmt.Fprintf(output, "%s\n", renderTrack(t, trackVector))
 	}
 }
 
@@ -106,7 +106,7 @@ func renderTrackVector(
 ) string {
 	trackVectorStrings := make([]string, len(vector))
 	for i, v := range vector {
-		trackVectorStrings[i] = fmt.Sprintf("%.5f", v)
+		trackVectorStrings[i] = fmt.Sprintf("%.10f", v)
 	}
 	return strings.Join(trackVectorStrings, ",")
 }
