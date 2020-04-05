@@ -49,6 +49,6 @@ func Test_ComputeTrackVectorsCommandHandler_Handle(t *testing.T) {
 	outBytes, err := ioutil.ReadAll(out)
 	require.NoError(t, err)
 
-	expectedOutput := "TCK_ID,ARTIST,TITLE,2.0000000000,0.2000000000,0.0200000000,0.0020000000,0.0002000000\n"
+	expectedOutput := "TCK_ID:|:ARTIST:|:TITLE:|:2.0000000000:|:0.2000000000:|:0.0200000000:|:0.0020000000:|:0.0002000000\n"
 	require.Equal(t, expectedOutput, string(outBytes))
 }
