@@ -9,6 +9,8 @@ import (
 	"github.com/pkg/errors"
 )
 
+const delimiter = ":|:"
+
 type ComputeTrackVectorsCmd struct {
 	Tracks     []model.Track
 	Tags       []model.Tag
@@ -98,7 +100,7 @@ func renderTrack(
 		track.Title,
 		renderTrackVector(trackVector),
 	}
-	return strings.Join(trackStrings, ",")
+	return strings.Join(trackStrings, delimiter)
 }
 
 func renderTrackVector(
@@ -108,5 +110,5 @@ func renderTrackVector(
 	for i, v := range vector {
 		trackVectorStrings[i] = fmt.Sprintf("%.10f", v)
 	}
-	return strings.Join(trackVectorStrings, ",")
+	return strings.Join(trackVectorStrings, delimiter)
 }
