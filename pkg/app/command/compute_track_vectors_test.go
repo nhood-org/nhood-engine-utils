@@ -25,11 +25,11 @@ func Test_ComputeTrackVectorsCommandHandler_Handle(t *testing.T) {
 	tags := []model.Tag{
 		{
 			Name:   "TAG_1",
-			Vector: []float64{0.1, 1, 10, 100, 1000},
+			Vector: []float64{1, 0.1, 0.01, 0.001, 0.0001},
 		},
 		{
 			Name:   "TAG_2",
-			Vector: []float64{0.2, 2, 20, 200, 2000},
+			Vector: []float64{2, 0.2, 0.02, 0.002, 0.0002},
 		},
 	}
 
@@ -49,6 +49,6 @@ func Test_ComputeTrackVectorsCommandHandler_Handle(t *testing.T) {
 	outBytes, err := ioutil.ReadAll(out)
 	require.NoError(t, err)
 
-	expectedOutput := "TCK_ID,ARTIST,TITLE,0.20000,2.00000,20.00000,200.00000,2000.00000"
+	expectedOutput := "TCK_ID,ARTIST,TITLE,2.0000000000,0.2000000000,0.0200000000,0.0020000000,0.0002000000\n"
 	require.Equal(t, expectedOutput, string(outBytes))
 }

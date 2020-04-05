@@ -94,6 +94,7 @@ func executeTagsMode(
 		Tracks: tracks,
 		Corpus: corpus,
 	}
+
 	err := command.NewGenerateCorpusTagsCommandHandler().Handle(c)
 	if err != nil {
 		panic(err)
