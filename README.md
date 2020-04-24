@@ -55,13 +55,12 @@ Configuration of CI is implemented in `.circleci/config.yml`.
 
 ## Versioning
 
-In order to release version, send the following API request to circleCI:
+In order to release version, execute the following script:
 
 ```bash
-curl -u $CIRCLE_CI_USER_TOKEN: \
-    -d build_parameters[CIRCLE_JOB]=release \
-    -d build_parameters[VERSION]=<NEW_VERSION> \
-    https://circleci.com/api/v1.1/project/github/nhood-org/nhood-engine-utils/tree/master
+export CIRCLE_CI_USER_TOKEN=<CIRCLE_CI_USER_TOKEN>
+export NEW_VERSION=<NEW_VERSION>
+make trigger-circle-ci-release
 ```
 
 ## License
