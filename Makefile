@@ -1,9 +1,3 @@
-#
-# Before running any of the commands from within this Makefile,
-# make sure your cloned repository is located in one of the sub-directories of the following path:
-# $GOPATH/src/github.com/nhood-org/...
-#
-
 GOBIN=$(shell pwd)/bin
 GOFILES=$(wildcard cmd/*.go)
 
