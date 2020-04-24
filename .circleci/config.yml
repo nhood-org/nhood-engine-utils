@@ -12,10 +12,10 @@ jobs:
     - checkout
     - restore_cache:
         keys:
-        - vendor-cache-v0.3
+        - vendor-cache-v0.4
     - run: make clean test build
     - save_cache:
-        key: vendor-cache-v0.3
+        key: vendor-cache-v0.4
         paths:
         - "vendor"
 
