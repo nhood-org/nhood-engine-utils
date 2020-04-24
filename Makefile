@@ -41,7 +41,7 @@ release-ci:
 	@test $(GITHUB_TOKEN) || ( echo "GITHUB_TOKEN not set" & exit 2 )
 	@test $(GITHUB_EMAIL) || ( echo "GITHUB_EMAIL not set" & exit 3 )
 	@test $(NEW_VERSION) || ( echo "NEW_VERSION not set" & exit 4 )
-	@echo "Releasing maven artifacts [CI]:"
+	@echo "Releasing application version [CI]:"
 	git config --global user.email ${GITHUB_EMAIL} && \
 	git config --global user.name ${GITHUB_USERNAME} && \
 	git tag -a v${NEW_VERSION} -m "${NEW_VERSION}" && \
@@ -53,7 +53,7 @@ trigger-circle-ci-release:
 	@test $(ARTIFACT_NAME) || ( echo "ARTIFACT_NAME not set" & exit 1 )
 	@test $(CIRCLE_CI_USER_TOKEN) || ( echo "CIRCLE_CI_USER_TOKEN not set" & exit 2 )
 	@test $(NEW_VERSION) || ( echo "NEW_VERSION not set" & exit 3 )
-	@echo "Triggering docker release:"
+	@echo "Triggering application release:"
 	curl -u ${CIRCLE_CI_USER_TOKEN}: \
 		-d build_parameters[CIRCLE_JOB]=release \
 		-d build_parameters[VERSION]=${NEW_VERSION} \
