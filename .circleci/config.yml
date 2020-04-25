@@ -3,7 +3,7 @@ version: 2
 defaults: &defaults
   docker:
   - image: circleci/golang:1.14
-  working_directory: /go/src/github.com/nhood-org/nhood-engine-utils
+  working_directory: /go/repositories/nhood-org/nhood-engine-utils
 
 jobs:
   build:
