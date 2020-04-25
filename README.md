@@ -1,5 +1,5 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-0.0.4-blue.svg?maxAge=2592000)](https://github.com/nhood-org/nhood-engine-utils/releases/tag/v0.0.4)
+[![Version](https://img.shields.io/badge/version-v0.0.4-blue.svg?maxAge=2592000)](https://github.com/nhood-org/nhood-engine-utils/releases/tag/v0.0.4)
 [![CircleCI](https://circleci.com/gh/nhood-org/nhood-engine-utils.svg?style=shield)](https://circleci.com/gh/nhood-org/nhood-engine-utils)
 [![Go Report Card](https://goreportcard.com/badge/github.com/nhood-org/nhood-engine-utils)](https://goreportcard.com/report/github.com/nhood-org/nhood-engine-utils)
 
