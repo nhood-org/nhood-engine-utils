@@ -1,4 +1,4 @@
-default: clean test build
+default: test build
 
 GOBIN=$(shell pwd)/bin
 GOFILES=$(wildcard cmd/*.go)
@@ -6,12 +6,6 @@ GOFILES=$(wildcard cmd/*.go)
 export GO111MODULE = on
 
 ARTIFACT_NAME = nhood-engine-utils
-
-.PHONY: clean
-clean:
-	@echo "Cleaning:"
-	go clean ./...
-	@echo "...done"
 
 .PHONY: install-dependencies
 install-dependencies:
