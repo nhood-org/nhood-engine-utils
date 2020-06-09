@@ -13,7 +13,7 @@ jobs:
     - restore_cache:
         keys:
         - vendor-cache-v0.4
-    - run: make clean test build
+    - run: make test build
     - save_cache:
         key: vendor-cache-v0.4
         paths:
