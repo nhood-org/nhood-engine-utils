@@ -22,7 +22,7 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.6.3 // indirect
-	github.com/stretchr/testify v1.6.0
+	github.com/stretchr/testify v1.6.1
 	github.com/ynqa/wego v0.0.0-20200424172015-c036d20f6ccf
 	go.uber.org/goleak v0.10.0
 	golang.org/x/sys v0.0.0-20200420163511-1957bb5e6d1f // indirect
